@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
   depth_gene_list = []
   gene_to_depth_dict = {}
-  gene_to_formula_list_dict = {}
+  gene_to_formula_data_list_dict = {}
 
   while depth_gene_heap:
     depth, gene = heapq.heappop(depth_gene_heap)
@@ -96,27 +96,31 @@ if __name__ == '__main__':
         if len(gene_set) > 1: continue
         chance = gene_chance['chance']
         #depth0 = math.log(chance_sum/chance, 2)
-        depth0 = chance_sum/chance
-        depth1 = depth0 + depth
+        add_depth = chance_sum/chance
+        total_depth = add_depth + depth
         
-        heapq.heappush(depth_gene_heap,(depth1,g))
+        heapq.heappush(depth_gene_heap,(total_depth,g))
 
-        if g not in gene_to_formula_list_dict:
-          gene_to_formula_list_dict[g] = []
+        if g not in gene_to_formula_data_list_dict:
+          gene_to_formula_data_list_dict[g] = []
         
-        gene_to_formula_list_dict[g].append((gene_done, gene, depth0, depth1))
+        gene_to_formula_data_list_dict[g].append({
+          'parent_list': (gene_done, gene),
+          'add_depth': add_depth,
+          'total_depth': total_depth,
+        })
 
   print(depth_gene_list)
 
   for depth, gene in depth_gene_list:
-    formula_list = None
-    if gene in gene_to_formula_list_dict:
-      formula_list = gene_to_formula_list_dict[gene]
-      formula_list = filter(lambda i:i[3] < depth + 0.00001, formula_list)
-      formula_list = list(formula_list)
-    if formula_list:
-      for gene0, gene1, depth0, depth1 in formula_list:
-        if depth1 > depth + 0.00001: continue
-        print('{} {} {} {} {}'.format(gene0, gene1, gene, depth0, depth1))
+    formula_data_list = None
+    if gene in gene_to_formula_data_list_dict:
+      formula_data_list = gene_to_formula_data_list_dict[gene]
+      formula_data_list = filter(lambda i:i['total_depth'] < depth + 0.00001, formula_data_list)
+      formula_data_list = list(formula_data_list)
+    if formula_data_list:
+      for formula_data in formula_data_list:
+        if formula_data['total_depth'] > (depth + 0.00001): continue
+        print(formula_data)
     else:
       print('{}'.format(gene))
