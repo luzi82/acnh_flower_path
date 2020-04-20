@@ -4,6 +4,8 @@ import math
 
 F='res/tulip.json'
 
+S6ERR = 1-0.9999966
+
 s_to_v_list_dict = {
   '00':'0',
   '01':'01',
@@ -37,6 +39,38 @@ def cross(gene0, gene1):
     ret_list.append({'g':gene,'chance':chance})
 
   return ret_list, len(gene_list)
+
+def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
+  c1 = g_to_c_dict[gene1]
+  cross_data_list, chance_sum = cross(gene0, gene1)
+
+  bad_cross_data_list = list(filter(lambda i:i['g'] in old_gene_set, cross_data_list))
+  if len(bad_cross_data_list) > 0:
+    return None
+
+  cross_data_list = list(filter(lambda i:g_to_c_dict[i['g']]==c1,cross_data_list))
+  if len(cross_data_list) == 1:
+    cross_data = cross_data_list[0]
+    if cross_data['g'] == gene1:
+      return {'g':cross_data['g'],'add_depth':0}
+    return {'g':cross_data['g'],'add_depth':1+chance_sum/cross_data['chance'],'method':'cross'}
+  if len(cross_data_list) == 2:
+    cross_data_list0 = list(filter(lambda i:i['g']!=gene1,cross_data_list))
+    if len(cross_data_list0) != 1: return None
+    cross_data = cross_data_list0[0]
+    old_gene_set0 = set(old_gene_set)
+    old_gene_set0.add(gene1)
+    roll0 = roll(gene0, cross_data['g'], g_to_c_dict, old_gene_set0)
+    if roll0 == None: return None
+    
+    chance_list = map(lambda i:i['chance'], cross_data_list)
+    chance_sum0 = sum(chance_list)
+    step = chance_sum / chance_sum0
+    
+    repeat = math.log(S6ERR, 1-(cross_data['chance']/chance_sum0))
+    
+    return {'g':roll0['g'],'add_depth':roll0['add_depth']+step*repeat,'method':'roll'}
+  return None
 
 if __name__ == '__main__':
 
@@ -95,22 +129,64 @@ if __name__ == '__main__':
         gene_set = c_to_gene_set_dict[c]
         if len(gene_set) > 1: continue
         chance = gene_chance['chance']
-        #depth0 = math.log(chance_sum/chance, 2)
-        add_depth = chance_sum/chance
-        total_depth = add_depth + depth
-        
-        heapq.heappush(depth_gene_heap,(total_depth,g))
 
-        if g not in gene_to_formula_data_list_dict:
-          gene_to_formula_data_list_dict[g] = []
-        
-        gene_to_formula_data_list_dict[g].append({
+        add_depth = 1 + chance_sum/chance
+        total_depth = add_depth + depth
+
+        formula_data = {
+          'product': g,
           'parent_list': (gene_done, gene),
           'add_depth': add_depth,
           'total_depth': total_depth,
-        })
+          'method': 'cross',
+        }
+        
+        heapq.heappush(depth_gene_heap,(formula_data['total_depth'],formula_data['product']))
+        if formula_data['product'] not in gene_to_formula_data_list_dict:
+          gene_to_formula_data_list_dict[formula_data['product']] = []
+        gene_to_formula_data_list_dict[formula_data['product']].append(formula_data)
 
+      roll0 = roll(gene_done, gene, g_to_c_dict)
+      if roll0 and roll0['g'] != gene and roll0['g'] != gene_done and roll0['method'] != 'cross':
+        g = roll0['g']
+        add_depth = roll0['add_depth']
+        total_depth = add_depth + depth
+
+        formula_data = {
+          'product': g,
+          'parent_list': (gene_done, gene),
+          'add_depth': add_depth,
+          'total_depth': total_depth,
+          'method': 'roll',
+        }
+
+        heapq.heappush(depth_gene_heap,(formula_data['total_depth'],formula_data['product']))
+        if formula_data['product'] not in gene_to_formula_data_list_dict:
+          gene_to_formula_data_list_dict[formula_data['product']] = []
+        gene_to_formula_data_list_dict[formula_data['product']].append(formula_data)
+
+      roll0 = roll(gene, gene_done, g_to_c_dict)
+      if roll0 and roll0['g'] != gene and roll0['g'] != gene_done and roll0['method'] != 'cross':
+        g = roll0['g']
+        add_depth = roll0['add_depth']
+        total_depth = add_depth + depth
+
+        formula_data = {
+          'product': g,
+          'parent_list': (gene, gene_done),
+          'add_depth': add_depth,
+          'total_depth': total_depth,
+          'method': 'roll',
+        }
+
+        heapq.heappush(depth_gene_heap,(formula_data['total_depth'],formula_data['product']))
+        if formula_data['product'] not in gene_to_formula_data_list_dict:
+          gene_to_formula_data_list_dict[formula_data['product']] = []
+        gene_to_formula_data_list_dict[formula_data['product']].append(formula_data)
+
+  print(len(depth_gene_list))
   print(depth_gene_list)
+  print(list(sorted(map(lambda i:i[1],depth_gene_list))))
 
   for depth, gene in depth_gene_list:
     formula_data_list = None
