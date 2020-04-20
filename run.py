@@ -88,12 +88,6 @@ if __name__ == '__main__':
           c_to_gene_set_dict[c] = set()
         c_to_gene_set_dict[c].add(g)
 
-      #print('---')
-      #print(gene)
-      #print(gene_done)
-      #print(c_to_gene_set_dict)
-      #print('---')
-
       for gene_chance in gene_chance_list:
         g = gene_chance['g']
         if g in gene_done_set: continue
@@ -112,14 +106,7 @@ if __name__ == '__main__':
         
         gene_to_formula_list_dict[g].append((gene_done, gene, depth0, depth1))
 
-        #print('---')
-        #print(gene     +' '+g_to_c_dict[gene])
-        #print(gene_done+' '+g_to_c_dict[gene_done])
-        #print(g        +' '+g_to_c_dict[g])
-        #print('---')
-
   print(depth_gene_list)
-  #print(gene_to_formula_list_dict)
 
   for depth, gene in depth_gene_list:
     formula_list = None
