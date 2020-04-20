@@ -52,7 +52,7 @@ def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
   if len(cross_data_list) == 1:
     cross_data = cross_data_list[0]
     if cross_data['g'] == gene1:
-      return {'g':cross_data['g'],'add_depth':0}
+      return {'g':cross_data['g'],'add_depth':0,'method':'self'}
     return {'g':cross_data['g'],'add_depth':chance_sum/cross_data['chance'],'method':'cross'}
   if len(cross_data_list) == 2:
     cross_data_list0 = list(filter(lambda i:i['g']!=gene1,cross_data_list))
@@ -147,7 +147,7 @@ if __name__ == '__main__':
         gene_to_formula_data_list_dict[formula_data['product']].append(formula_data)
 
       roll0 = roll(gene_done, gene, g_to_c_dict)
-      if roll0 and roll0['g'] != gene and roll0['g'] != gene_done and roll0['method'] != 'cross':
+      if roll0 and roll0['method'] == 'roll':
         g = roll0['g']
         add_depth = roll0['add_depth']
         total_depth = add_depth + depth
@@ -166,7 +166,7 @@ if __name__ == '__main__':
         gene_to_formula_data_list_dict[formula_data['product']].append(formula_data)
 
       roll0 = roll(gene, gene_done, g_to_c_dict)
-      if roll0 and roll0['g'] != gene and roll0['g'] != gene_done and roll0['method'] != 'cross':
+      if roll0 and roll0['method'] == 'roll':
         g = roll0['g']
         add_depth = roll0['add_depth']
         total_depth = add_depth + depth
