@@ -53,7 +53,7 @@ def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
     cross_data = cross_data_list[0]
     if cross_data['g'] == gene1:
       return {'g':cross_data['g'],'add_depth':0}
-    return {'g':cross_data['g'],'add_depth':1+chance_sum/cross_data['chance'],'method':'cross'}
+    return {'g':cross_data['g'],'add_depth':chance_sum/cross_data['chance'],'method':'cross'}
   if len(cross_data_list) == 2:
     cross_data_list0 = list(filter(lambda i:i['g']!=gene1,cross_data_list))
     if len(cross_data_list0) != 1: return None
@@ -130,7 +130,7 @@ if __name__ == '__main__':
         if len(gene_set) > 1: continue
         chance = gene_chance['chance']
 
-        add_depth = 1 + chance_sum/chance
+        add_depth = chance_sum/chance
         total_depth = add_depth + depth
 
         formula_data = {
