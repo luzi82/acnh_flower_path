@@ -108,6 +108,24 @@ if __name__ == '__main__':
         gene_to_formula_data_list_dict[formula_data['product']] = []
       gene_to_formula_data_list_dict[formula_data['product']].append(formula_data)
 
+  for gene_data in gene_data_list:
+    if gene_data['s'] > 0:
+      add_formul_data({
+        'product': gene_data['g'],
+        'parent_list': None,
+        'add_depth': 0,
+        'total_depth': 0,
+        'method': 'seed',
+      })
+    if gene_data['m'] > 0:
+      add_formul_data({
+        'product': gene_data['g'],
+        'parent_list': None,
+        'add_depth': 0,
+        'total_depth': 0,
+        'method': 'myth',
+      })
+
   while depth_gene_heap:
     depth, gene = heapq.heappop(depth_gene_heap)
     if gene in gene_done_set:
