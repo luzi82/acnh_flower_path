@@ -102,6 +102,12 @@ if __name__ == '__main__':
   gene_to_depth_dict = {}
   gene_to_formula_data_list_dict = {}
 
+  def add_formul_data(formula_data):
+      heapq.heappush(depth_gene_heap,(formula_data['total_depth'],formula_data['product']))
+      if formula_data['product'] not in gene_to_formula_data_list_dict:
+        gene_to_formula_data_list_dict[formula_data['product']] = []
+      gene_to_formula_data_list_dict[formula_data['product']].append(formula_data)
+
   while depth_gene_heap:
     depth, gene = heapq.heappop(depth_gene_heap)
     if gene in gene_done_set:
@@ -133,37 +139,27 @@ if __name__ == '__main__':
         add_depth = chance_sum/chance
         total_depth = add_depth + depth
 
-        formula_data = {
+        add_formul_data({
           'product': g,
           'parent_list': (gene_done, gene),
           'add_depth': add_depth,
           'total_depth': total_depth,
           'method': 'cross',
-        }
+        })
         
-        heapq.heappush(depth_gene_heap,(formula_data['total_depth'],formula_data['product']))
-        if formula_data['product'] not in gene_to_formula_data_list_dict:
-          gene_to_formula_data_list_dict[formula_data['product']] = []
-        gene_to_formula_data_list_dict[formula_data['product']].append(formula_data)
-
       roll0 = roll(gene_done, gene, g_to_c_dict)
       if roll0 and roll0['method'] == 'roll':
         g = roll0['g']
         add_depth = roll0['add_depth']
         total_depth = add_depth + depth
 
-        formula_data = {
+        add_formul_data({
           'product': g,
           'parent_list': (gene_done, gene),
           'add_depth': add_depth,
           'total_depth': total_depth,
           'method': 'roll',
-        }
-
-        heapq.heappush(depth_gene_heap,(formula_data['total_depth'],formula_data['product']))
-        if formula_data['product'] not in gene_to_formula_data_list_dict:
-          gene_to_formula_data_list_dict[formula_data['product']] = []
-        gene_to_formula_data_list_dict[formula_data['product']].append(formula_data)
+        })
 
       roll0 = roll(gene, gene_done, g_to_c_dict)
       if roll0 and roll0['method'] == 'roll':
@@ -171,18 +167,13 @@ if __name__ == '__main__':
         add_depth = roll0['add_depth']
         total_depth = add_depth + depth
 
-        formula_data = {
+        add_formul_data({
           'product': g,
           'parent_list': (gene, gene_done),
           'add_depth': add_depth,
           'total_depth': total_depth,
           'method': 'roll',
-        }
-
-        heapq.heappush(depth_gene_heap,(formula_data['total_depth'],formula_data['product']))
-        if formula_data['product'] not in gene_to_formula_data_list_dict:
-          gene_to_formula_data_list_dict[formula_data['product']] = []
-        gene_to_formula_data_list_dict[formula_data['product']].append(formula_data)
+        })
 
   print(len(depth_gene_list))
   print(depth_gene_list)
