@@ -1,11 +1,7 @@
 import futsu.json
 import heapq
 import math
-
-F='res/pansy.json'
-#F='res/tulip.json'
-
-ENABLE_MYTH = False
+import os
 
 S6ERR = 1-0.9999966
 
@@ -95,7 +91,17 @@ def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
 
 if __name__ == '__main__':
 
-  flower_data = futsu.json.path_to_data(F)
+  import argparse
+
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--flower", type=str)
+  parser.add_argument("--myth", type=int, default=1)
+  args = parser.parse_args()
+
+  flower_data_path = os.path.join('res','{}.json'.format(args.flower))
+  args_myth = args.myth != 0
+
+  flower_data = futsu.json.path_to_data(flower_data_path)
   
   gene_data_list = flower_data['gene_data_list']
   
@@ -114,7 +120,7 @@ if __name__ == '__main__':
   for gene_data in gene_data_list:
     if gene_data['s'] > 0:
       heapq.heappush(depth_gene_heap,(0,gene_data['g']))
-    if ENABLE_MYTH and gene_data['m'] > 0:
+    if args_myth and gene_data['m'] > 0:
       heapq.heappush(depth_gene_heap,(0,gene_data['g']))
 
   print(depth_gene_heap)
@@ -140,7 +146,7 @@ if __name__ == '__main__':
         'total_depth': 0,
         'method': 'seed',
       })
-    if ENABLE_MYTH and gene_data['m'] > 0:
+    if args_myth and gene_data['m'] > 0:
       add_formul_data({
         'product': gene_data['g'],
         'parent_list': None,
