@@ -3,7 +3,8 @@ import heapq
 import math
 import os
 
-S6ERR = 1-0.9999966
+S6PASS = 0.9999966
+S6ERR = 1-S6PASS
 
 s_to_v_list_dict = {
   '00':'0',
@@ -37,7 +38,19 @@ def cross(gene0, gene1):
     chance = len(list(filter(lambda i:i==gene, gene_list)))
     ret_list.append({'g':gene,'chance':chance})
 
-  return ret_list, len(gene_list)
+  chance_sum = len(gene_list)
+  for data in ret_list:
+    data['p'] = data['chance'] / chance_sum
+
+  return ret_list, chance_sum
+
+def cross_data_list_to_c_to_p_dict(cross_data_list, g_to_c_dict):
+  c_to_p_dict = {}
+  for cross_data in cross_data_list:
+    c = g_to_c_dict[cross_data['g']]
+    p = cross_data['p']
+    c_to_p_dict[c] = c_to_p_dict.get(c,0) + p
+  return c_to_p_dict
 
 def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
   c1 = g_to_c_dict[gene1]
@@ -88,6 +101,44 @@ def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
       'method':'roll'
     }
   return None
+
+def verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict):
+  cross_data_list, chance_sum = cross(parent_gene_0, parent_gene_1)
+  cross_c_to_p_dict = cross_data_list_to_c_to_p_dict(cross_data_list, g_to_c_dict)
+
+  product_c_to_cross_data_list_dict = {}
+  for cross_c in cross_c_to_p_dict:
+    product_c_to_cross_data_list_dict[cross_c] = []
+  for cross_data in cross_data_list:
+    product_g = cross_data['g']
+    product_c = g_to_c_dict[product_g]
+    product_c_to_cross_data_list_dict[product_c].append(cross_data)
+
+  for product_c, c_cross_data_list in product_c_to_cross_data_list_dict.items():
+    if len(c_cross_data_list) <= 1: continue
+    product_gene_list = list(map(lambda i:i['g'], c_cross_data_list))
+
+    verify_g_to_c_set_dict = {}
+    verify_gc_to_p_dict = {}
+    for product_gene in product_gene_list:
+      verify_cross_data_list, _ = cross(verify_gene, product_gene)
+      verify_c_to_p_dict = cross_data_list_to_c_to_p_dict(verify_cross_data_list, g_to_c_dict)
+      for c, p in verify_c_to_p_dict.items():
+        verify_gc_to_p_dict[(product_gene, c)] = p
+
+    for product_gene in product_gene_list:
+      # t0
+      g_to_p_dict = {
+        c_cross_data['g']: c_cross_data['p']/cross_c_to_p_dict[product_c]
+        for c_cross_data in c_cross_data_list
+      }
+      
+      # t1-100
+      for t in range(100):
+        g_to_p_dict0 = {}
+        for product_gene0 in product_gene_list:
+          p = 0
+          TODO
 
 if __name__ == '__main__':
 
