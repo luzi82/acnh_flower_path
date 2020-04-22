@@ -2,7 +2,10 @@ import futsu.json
 import heapq
 import math
 
-F='res/tulip.json'
+F='res/pansy.json'
+#F='res/tulip.json'
+
+ENABLE_MYTH = False
 
 S6ERR = 1-0.9999966
 
@@ -52,8 +55,20 @@ def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
   if len(cross_data_list) == 1:
     cross_data = cross_data_list[0]
     if cross_data['g'] == gene1:
-      return {'g':cross_data['g'],'add_depth':0,'method':'self'}
-    return {'g':cross_data['g'],'add_depth':chance_sum/cross_data['chance'],'method':'cross'}
+      return {
+        'g':cross_data['g'],
+        'step_depth':0,
+        'step_count':0,
+        'add_depth':0,
+        'method':'self'
+      }
+    return {
+      'g':cross_data['g'],
+      'step_depth':chance_sum/cross_data['chance'],
+      'step_count':1,
+      'add_depth':chance_sum/cross_data['chance'],
+      'method':'cross'
+    }
   if len(cross_data_list) == 2:
     cross_data_list0 = list(filter(lambda i:i['g']!=gene1,cross_data_list))
     if len(cross_data_list0) != 1: return None
@@ -65,11 +80,17 @@ def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
     
     chance_list = map(lambda i:i['chance'], cross_data_list)
     chance_sum0 = sum(chance_list)
-    step = chance_sum / chance_sum0
+    step_depth = chance_sum / chance_sum0
     
-    repeat = math.log(S6ERR, 1-(cross_data['chance']/chance_sum0))
+    step_count = math.ceil(math.log(S6ERR, 1-(cross_data['chance']/chance_sum0)))
     
-    return {'g':roll0['g'],'add_depth':roll0['add_depth']+step*repeat,'method':'roll'}
+    return {
+      'g':roll0['g'],
+      'step_depth':step_depth,
+      'step_count':step_count,
+      'add_depth':roll0['add_depth']+step_depth*step_count,
+      'method':'roll'
+    }
   return None
 
 if __name__ == '__main__':
@@ -93,7 +114,7 @@ if __name__ == '__main__':
   for gene_data in gene_data_list:
     if gene_data['s'] > 0:
       heapq.heappush(depth_gene_heap,(0,gene_data['g']))
-    if gene_data['m'] > 0:
+    if ENABLE_MYTH and gene_data['m'] > 0:
       heapq.heappush(depth_gene_heap,(0,gene_data['g']))
 
   print(depth_gene_heap)
@@ -113,14 +134,18 @@ if __name__ == '__main__':
       add_formul_data({
         'product': gene_data['g'],
         'parent_list': None,
+        'step_depth': 0,
+        'step_count': 0,
         'add_depth': 0,
         'total_depth': 0,
         'method': 'seed',
       })
-    if gene_data['m'] > 0:
+    if ENABLE_MYTH and gene_data['m'] > 0:
       add_formul_data({
         'product': gene_data['g'],
         'parent_list': None,
+        'step_depth': 0,
+        'step_count': 0,
         'add_depth': 0,
         'total_depth': 0,
         'method': 'myth',
@@ -160,6 +185,8 @@ if __name__ == '__main__':
         add_formul_data({
           'product': g,
           'parent_list': (gene_done, gene),
+          'step_depth': add_depth,
+          'step_count': 1,
           'add_depth': add_depth,
           'total_depth': total_depth,
           'method': 'cross',
@@ -174,6 +201,8 @@ if __name__ == '__main__':
         add_formul_data({
           'product': g,
           'parent_list': (gene_done, gene),
+          'step_depth': roll0['step_depth'],
+          'step_count': roll0['step_count'],
           'add_depth': add_depth,
           'total_depth': total_depth,
           'method': 'roll',
@@ -188,6 +217,8 @@ if __name__ == '__main__':
         add_formul_data({
           'product': g,
           'parent_list': (gene, gene_done),
+          'step_depth': roll0['step_depth'],
+          'step_count': roll0['step_count'],
           'add_depth': add_depth,
           'total_depth': total_depth,
           'method': 'roll',
