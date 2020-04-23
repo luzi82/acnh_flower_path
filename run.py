@@ -102,9 +102,19 @@ def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
     }
   return None
 
-def verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict):
+def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict):
+  print('FIETHLFSFJ p={parent_gene_0},{parent_gene_1} v={verify_gene}'.format(
+    parent_gene_0=parent_gene_0,
+    parent_gene_1=parent_gene_1,
+    verify_gene=verify_gene,
+  ))
+
+  cross_verify_data_list = []
+
   cross_data_list, chance_sum = cross(parent_gene_0, parent_gene_1)
   cross_c_to_p_dict = cross_data_list_to_c_to_p_dict(cross_data_list, g_to_c_dict)
+
+  print('UHFUGYMTGG '+str(cross_data_list))
 
   product_c_to_cross_data_list_dict = {}
   for cross_c in cross_c_to_p_dict:
@@ -125,8 +135,15 @@ def verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict):
       verify_c_to_p_dict = cross_data_list_to_c_to_p_dict(verify_cross_data_list, g_to_c_dict)
       for c, p in verify_c_to_p_dict.items():
         verify_gc_to_p_dict[(product_gene, c)] = p
+      verify_g_to_c_set_dict[product_gene] = set(verify_c_to_p_dict.keys())
+
+    print('JVJXZYFEMC '+str(verify_g_to_c_set_dict))
+    print('MXLUZKAYMJ '+str(verify_gc_to_p_dict))
 
     for product_gene in product_gene_list:
+
+      print('PSWQKIQBMK product_gene='+product_gene)
+
       # t0
       g_to_p_dict = {
         c_cross_data['g']: c_cross_data['p']/cross_c_to_p_dict[product_c]
@@ -135,10 +152,39 @@ def verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict):
       
       # t1-100
       for t in range(100):
+
+        print('MMGIKCSUEN t={t} g_to_p_dict={g_to_p_dict}'.format(
+          t=t,
+          g_to_p_dict=g_to_p_dict,
+        ))
+
         g_to_p_dict0 = {}
         for product_gene0 in product_gene_list:
+          print('XSPXUELWDQ product_gene0='+product_gene0)
           p = 0
-          TODO
+          for c in verify_g_to_c_set_dict[product_gene]:
+            print('PTNPQVVGBZ c='+c)
+            pc = verify_gc_to_p_dict.get((product_gene,  c),0)
+            pu = verify_gc_to_p_dict.get((product_gene0, c),0) * g_to_p_dict[product_gene0]
+            pl = sum(map(lambda i: verify_gc_to_p_dict.get((i,c),0) * g_to_p_dict[i], product_gene_list))
+            cp = pc * pu / pl
+            print('PTNPQVVGBZ cp='+str(cp))
+            p += cp
+          g_to_p_dict0[product_gene0] = p
+
+        g_to_p_dict = g_to_p_dict0
+        
+        if g_to_p_dict[product_gene] >= S6PASS:
+          cross_verify_data_list.append({
+            'product_gene': product_gene,
+            'parent_gene_list': (parent_gene_0, parent_gene_1),
+            'verify_gene': verify_gene,
+            'add_depth': t+1,
+            'method': 'verify'
+          })
+          break
+
+  return cross_verify_data_list
 
 if __name__ == '__main__':
 
@@ -280,6 +326,27 @@ if __name__ == '__main__':
           'total_depth': total_depth,
           'method': 'roll',
         })
+
+    cross_verify_data_list = []
+    for gene_done0 in gene_done_set:
+      for gene_done1 in gene_done_set:
+        if gene_done1 < gene_done0: continue
+        pg0, pg1, vg = gene_done0, gene_done1, gene
+        cross_verify_data_list += cross_verify(pg0, pg1, vg, g_to_c_dict)
+        pg0, pg1, vg = gene_done0, gene, gene_done1
+        cross_verify_data_list += cross_verify(pg0, pg1, vg, g_to_c_dict)
+        pg0, pg1, vg = gene_done1, gene, gene_done0
+        cross_verify_data_list += cross_verify(pg0, pg1, vg, g_to_c_dict)
+    for cross_verify_data in cross_verify_data_list:
+      add_formul_data({
+        'product':      cross_verify_data['product_gene'],
+        'parent_list':  cross_verify_data['parent_gene_list'],
+        'step_depth':   1,
+        'step_count':   cross_verify_data['add_depth'],
+        'add_depth':    cross_verify_data['add_depth'],
+        'total_depth':  depth+cross_verify_data['add_depth'],
+        'method':       'verify',
+      })
 
   print(len(depth_gene_list))
   print(depth_gene_list)
