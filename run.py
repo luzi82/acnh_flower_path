@@ -103,6 +103,9 @@ def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
   return None
 
 def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict):
+  return []
+
+def _cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict):
   print('FIETHLFSFJ p={parent_gene_0},{parent_gene_1} v={verify_gene}'.format(
     parent_gene_0=parent_gene_0,
     parent_gene_1=parent_gene_1,
@@ -236,6 +239,7 @@ if __name__ == '__main__':
     if gene_data['s'] > 0:
       add_formul_data({
         'product': gene_data['g'],
+        'product.color': g_to_c_dict[gene_data['g']],
         'parent_list': None,
         'step_depth': 0,
         'step_count': 0,
@@ -246,6 +250,7 @@ if __name__ == '__main__':
     if args_myth and gene_data['m'] > 0:
       add_formul_data({
         'product': gene_data['g'],
+        'product.color': g_to_c_dict[gene_data['g']],
         'parent_list': None,
         'step_depth': 0,
         'step_count': 0,
@@ -287,6 +292,7 @@ if __name__ == '__main__':
 
         add_formul_data({
           'product': g,
+          'product.color': g_to_c_dict[g],
           'parent_list': (gene_done, gene),
           'step_depth': add_depth,
           'step_count': 1,
@@ -303,6 +309,7 @@ if __name__ == '__main__':
 
         add_formul_data({
           'product': g,
+          'product.color': g_to_c_dict[g],
           'parent_list': (gene_done, gene),
           'step_depth': roll0['step_depth'],
           'step_count': roll0['step_count'],
@@ -319,6 +326,7 @@ if __name__ == '__main__':
 
         add_formul_data({
           'product': g,
+          'product.color': g_to_c_dict[g],
           'parent_list': (gene, gene_done),
           'step_depth': roll0['step_depth'],
           'step_count': roll0['step_count'],
@@ -340,6 +348,7 @@ if __name__ == '__main__':
     for cross_verify_data in cross_verify_data_list:
       add_formul_data({
         'product':      cross_verify_data['product_gene'],
+        'product.color': g_to_c_dict[cross_verify_data['product_gene']],
         'parent_list':  cross_verify_data['parent_gene_list'],
         'step_depth':   1,
         'step_count':   cross_verify_data['add_depth'],
@@ -352,15 +361,13 @@ if __name__ == '__main__':
   print(depth_gene_list)
   print(list(sorted(map(lambda i:i[1],depth_gene_list))))
 
-  for depth, gene in depth_gene_list:
-    formula_data_list = None
-    if gene in gene_to_formula_data_list_dict:
-      formula_data_list = gene_to_formula_data_list_dict[gene]
-      formula_data_list = filter(lambda i:i['total_depth'] < depth + 0.00001, formula_data_list)
-      formula_data_list = list(formula_data_list)
-    if formula_data_list:
-      for formula_data in formula_data_list:
-        if formula_data['total_depth'] > (depth + 0.00001): continue
-        print(formula_data)
-    else:
-      print('{}'.format(gene))
+  #needed_gene_list = []
+
+  for depth, gene in reversed(depth_gene_list):
+    formula_data_list = gene_to_formula_data_list_dict[gene]
+    formula_data_list = filter(lambda i:i['total_depth'] < depth + 0.00001, formula_data_list)
+    formula_data_list = list(formula_data_list)
+    for formula_data in formula_data_list:
+      if formula_data['total_depth'] > (depth + 0.00001): continue
+      #formula_data['product.color'] = g_to_c_dict[formula_data['product']]
+      print(formula_data)

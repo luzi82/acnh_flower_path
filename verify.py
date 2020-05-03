@@ -2,6 +2,9 @@ import run
 import futsu.json
 import os
 
+def ssorted(ddict):
+  return {k:ddict[k] for k in sorted(ddict.keys())}
+
 if __name__ == '__main__':
 
   verify_data_path = 'verify.json'
@@ -34,10 +37,10 @@ if __name__ == '__main__':
     for pool_gene in pool_gene_list:
       cross_data_list, _ = run.cross(own_gene, pool_gene)
       c_to_p_dict = run.cross_data_list_to_c_to_p_dict(cross_data_list, g_to_c_dict)
-      pool_g_to_c_to_p_dict_dict[pool_gene] = c_to_p_dict
+      pool_g_to_c_to_p_dict_dict[pool_gene] = ssorted(c_to_p_dict)
 
-    #print(own_gene)
-    #print(pool_g_to_c_to_p_dict_dict)
+    print(own_gene)
+    print(pool_g_to_c_to_p_dict_dict)
 
     target_c_remain_set = set()
     for target_gene in target_gene_list:
