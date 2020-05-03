@@ -1,4 +1,5 @@
 import futsu.json
+import futsu.storage
 import heapq
 import math
 import os
@@ -204,10 +205,18 @@ if __name__ == '__main__':
   flower_data = futsu.json.path_to_data(flower_data_path)
   
   gene_data_list = flower_data['gene_data_list']
+
+  input_txt = 'input/{}.txt'.format(args.flower)
+  if futsu.storage.is_blob_exist(input_txt):
+    own_gene_set = futsu.fs.file_to_string_list(input_txt)
+    own_gene_set = set(filter(lambda i:len(i)>0, own_gene_set))
+  else:
+    own_gene_set = set()
   
   for gene_data in gene_data_list:
     if 's' not in gene_data: gene_data['s'] = 0
     if 'm' not in gene_data: gene_data['m'] = 0
+    gene_data['o'] = 1 if gene_data['g'] in own_gene_set else 0
   
   g_to_c_dict = {
     i['g']: i['c']
@@ -220,7 +229,9 @@ if __name__ == '__main__':
   for gene_data in gene_data_list:
     if gene_data['s'] > 0:
       heapq.heappush(depth_gene_heap,(0,gene_data['g']))
-    if args_myth and gene_data['m'] > 0:
+    elif args_myth and gene_data['m'] > 0:
+      heapq.heappush(depth_gene_heap,(0,gene_data['g']))
+    elif gene_data['o'] > 0:
       heapq.heappush(depth_gene_heap,(0,gene_data['g']))
 
   print(depth_gene_heap)
@@ -247,7 +258,7 @@ if __name__ == '__main__':
         'total_depth': 0,
         'method': 'seed',
       })
-    if args_myth and gene_data['m'] > 0:
+    elif args_myth and gene_data['m'] > 0:
       add_formul_data({
         'product': gene_data['g'],
         'product.color': g_to_c_dict[gene_data['g']],
@@ -257,6 +268,17 @@ if __name__ == '__main__':
         'add_depth': 0,
         'total_depth': 0,
         'method': 'myth',
+      })
+    elif gene_data['o'] > 0:
+      add_formul_data({
+        'product': gene_data['g'],
+        'product.color': g_to_c_dict[gene_data['g']],
+        'parent_list': None,
+        'step_depth': 0,
+        'step_count': 0,
+        'add_depth': 0,
+        'total_depth': 0,
+        'method': 'own',
       })
 
   while depth_gene_heap:
