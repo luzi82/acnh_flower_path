@@ -361,9 +361,15 @@ if __name__ == '__main__':
   print(depth_gene_list)
   print(list(sorted(map(lambda i:i[1],depth_gene_list))))
 
-  #needed_gene_list = []
+  needed_gene_set = set()
 
   for depth, gene in reversed(depth_gene_list):
+    needed = False
+    if '1' not in gene:
+      needed = True
+    if gene in needed_gene_set:
+      needed = True
+    if not needed: continue
     formula_data_list = gene_to_formula_data_list_dict[gene]
     formula_data_list = filter(lambda i:i['total_depth'] < depth + 0.00001, formula_data_list)
     formula_data_list = list(formula_data_list)
@@ -371,3 +377,6 @@ if __name__ == '__main__':
       if formula_data['total_depth'] > (depth + 0.00001): continue
       #formula_data['product.color'] = g_to_c_dict[formula_data['product']]
       print(formula_data)
+      if formula_data['parent_list']:
+        needed_gene_set.add(formula_data['parent_list'][0])
+        needed_gene_set.add(formula_data['parent_list'][1])
