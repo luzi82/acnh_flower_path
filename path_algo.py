@@ -14,6 +14,9 @@ s_to_v_list_dict = {
   '22':'2',
 }
 
+#def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, product_to_depth_dict):
+#  return []
+
 def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, product_to_depth_dict):
   print('FIETHLFSFJ p={parent_gene_0},{parent_gene_1} v={verify_gene}'.format(
     parent_gene_0=parent_gene_0,
