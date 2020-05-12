@@ -5,6 +5,8 @@ import math
 import os
 import path_algo
 
+from fractions import Fraction
+
 S6PASS = 0.9999966
 S6ERR = 1-S6PASS
 FLOAT_CORRECT = 0.00001
@@ -13,56 +15,57 @@ cross = path_algo.cross
 cross_verify = path_algo.cross_verify
 s_to_v_list_dict = path_algo.s_to_v_list_dict
 cross_data_list_to_c_to_p_dict = path_algo.cross_data_list_to_c_to_p_dict
+roll = path_algo.roll
 
-def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
-  c1 = g_to_c_dict[gene1]
-  cross_data_list, chance_sum = cross(gene0, gene1)
-
-  bad_cross_data_list = list(filter(lambda i:i['g'] in old_gene_set, cross_data_list))
-  if len(bad_cross_data_list) > 0:
-    return None
-
-  cross_data_list = list(filter(lambda i:g_to_c_dict[i['g']]==c1,cross_data_list))
-  if len(cross_data_list) == 1:
-    cross_data = cross_data_list[0]
-    if cross_data['g'] == gene1:
-      return {
-        'g':cross_data['g'],
-        'step_depth':0,
-        'step_count':0,
-        'add_depth':0,
-        'method':'self'
-      }
-    return {
-      'g':cross_data['g'],
-      'step_depth':chance_sum/cross_data['chance'],
-      'step_count':1,
-      'add_depth':chance_sum/cross_data['chance'],
-      'method':'cross'
-    }
-  if len(cross_data_list) == 2:
-    cross_data_list0 = list(filter(lambda i:i['g']!=gene1,cross_data_list))
-    if len(cross_data_list0) != 1: return None
-    cross_data = cross_data_list0[0]
-    old_gene_set0 = set(old_gene_set)
-    old_gene_set0.add(gene1)
-    roll0 = roll(gene0, cross_data['g'], g_to_c_dict, old_gene_set0)
-    if roll0 == None: return None
-    
-    chance_list = map(lambda i:i['chance'], cross_data_list)
-    chance_sum0 = sum(chance_list)
-    step_depth = chance_sum / chance_sum0
-    
-    step_count = math.ceil(math.log(S6ERR, 1-(cross_data['chance']/chance_sum0)))
-    
-    return {
-      'g':roll0['g'],
-      'step_depth':step_depth,
-      'step_count':step_count,
-      'add_depth':roll0['add_depth']+step_depth*step_count,
-      'method':'roll'
-    }
-  return None
+#def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
+#  c1 = g_to_c_dict[gene1]
+#  cross_data_list, chance_sum = cross(gene0, gene1)
+#
+#  bad_cross_data_list = list(filter(lambda i:i['g'] in old_gene_set, cross_data_list))
+#  if len(bad_cross_data_list) > 0:
+#    return None
+#
+#  cross_data_list = list(filter(lambda i:g_to_c_dict[i['g']]==c1,cross_data_list))
+#  if len(cross_data_list) == 1:
+#    cross_data = cross_data_list[0]
+#    if cross_data['g'] == gene1:
+#      return {
+#        'g':cross_data['g'],
+#        'step_depth':0,
+#        'step_count':0,
+#        'add_depth':0,
+#        'method':'self'
+#      }
+#    return {
+#      'g':cross_data['g'],
+#      'step_depth':chance_sum/cross_data['chance'],
+#      'step_count':1,
+#      'add_depth':chance_sum/cross_data['chance'],
+#      'method':'cross'
+#    }
+#  if len(cross_data_list) == 2:
+#    cross_data_list0 = list(filter(lambda i:i['g']!=gene1,cross_data_list))
+#    if len(cross_data_list0) != 1: return None
+#    cross_data = cross_data_list0[0]
+#    old_gene_set0 = set(old_gene_set)
+#    old_gene_set0.add(gene1)
+#    roll0 = roll(gene0, cross_data['g'], g_to_c_dict, old_gene_set0)
+#    if roll0 == None: return None
+#    
+#    chance_list = map(lambda i:i['chance'], cross_data_list)
+#    chance_sum0 = sum(chance_list)
+#    step_depth = chance_sum / chance_sum0
+#    
+#    step_count = math.ceil(math.log(S6ERR, 1-(cross_data['chance']/chance_sum0)))
+#    
+#    return {
+#      'g':roll0['g'],
+#      'step_depth':step_depth,
+#      'step_count':step_count,
+#      'add_depth':roll0['add_depth']+step_depth*step_count,
+#      'method':'roll'
+#    }
+#  return None
 
 if __name__ == '__main__':
 
@@ -205,41 +208,66 @@ if __name__ == '__main__':
           'method': 'cross',
         })
         
-      roll0 = roll(gene_done, gene, g_to_c_dict)
-      if roll0 and roll0['method'] == 'roll':
-        g = roll0['g']
-        add_depth = roll0['add_depth']
-        total_depth = add_depth + depth
+      #roll0 = roll(gene_done, gene, g_to_c_dict)
+      #if roll0 and roll0['method'] == 'roll':
+      #  g = roll0['g']
+      #  add_depth = roll0['add_depth']
+      #  total_depth = add_depth + depth
+      #
+      #  add_formul_data({
+      #    'product': g,
+      #    'product.color': g_to_c_dict[g],
+      #    'parent_list': (gene_done, gene),
+      #    'step_depth': roll0['step_depth'],
+      #    'step_count': roll0['step_count'],
+      #    'begin_depth': depth,
+      #    'add_depth': add_depth,
+      #    'total_depth': total_depth,
+      #    'method': 'roll',
+      #  })
 
-        add_formul_data({
-          'product': g,
-          'product.color': g_to_c_dict[g],
-          'parent_list': (gene_done, gene),
-          'step_depth': roll0['step_depth'],
-          'step_count': roll0['step_count'],
-          'begin_depth': depth,
-          'add_depth': add_depth,
-          'total_depth': total_depth,
-          'method': 'roll',
-        })
+      #roll0 = roll(gene, gene_done, g_to_c_dict)
+      #if roll0 and roll0['method'] == 'roll':
+      #  g = roll0['g']
+      #  add_depth = roll0['add_depth']
+      #  total_depth = add_depth + depth
+      #
+      #  add_formul_data({
+      #    'product': g,
+      #    'product.color': g_to_c_dict[g],
+      #    'parent_list': (gene, gene_done),
+      #    'step_depth': roll0['step_depth'],
+      #    'step_count': roll0['step_count'],
+      #    'begin_depth': depth,
+      #    'add_depth': add_depth,
+      #    'total_depth': total_depth,
+      #    'method': 'roll',
+      #  })
 
-      roll0 = roll(gene, gene_done, g_to_c_dict)
-      if roll0 and roll0['method'] == 'roll':
-        g = roll0['g']
-        add_depth = roll0['add_depth']
-        total_depth = add_depth + depth
-
-        add_formul_data({
-          'product': g,
-          'product.color': g_to_c_dict[g],
-          'parent_list': (gene, gene_done),
-          'step_depth': roll0['step_depth'],
-          'step_count': roll0['step_count'],
-          'begin_depth': depth,
-          'add_depth': add_depth,
-          'total_depth': total_depth,
-          'method': 'roll',
-        })
+    roll_data_list = []
+    for gene_done0 in gene_done_set:
+      for gene_done1 in gene_done_set:
+        if gene_done1 < gene_done0: continue
+        pg0, pg1, vg = gene_done0, gene_done1, gene
+        roll_data_list += roll(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict)
+        if gene_done0 != gene:
+          pg0, pg1, vg = gene, gene_done1, gene_done0
+          roll_data_list += roll(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict)
+        if gene_done1 != gene:
+          pg0, pg1, vg = gene_done0, gene, gene_done1
+          roll_data_list += roll(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict)
+    for roll_data in roll_data_list:
+      add_formul_data({
+        'product':      roll_data['product'],
+        'product.color': g_to_c_dict[roll_data['product']],
+        'parent_list':  roll_data['parent_list'],
+        'step_depth':   1,
+        'step_count':   roll_data['add_depth'],
+        'begin_depth':  depth,
+        'add_depth':    roll_data['add_depth'],
+        'total_depth':  depth+roll_data['add_depth'],
+        'method':       'roll',
+      })
 
     cross_verify_data_list = []
     for gene_done0 in gene_done_set:
