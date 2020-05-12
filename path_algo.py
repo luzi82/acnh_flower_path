@@ -342,6 +342,9 @@ def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, pro
       False: fg_state_ffpredf_ftpref_ttpref_p_list,
       True:  tg_state_ffpredf_ftpref_ttpref_p_list,
     }
+    print('YUKGBLJRIA state_to_state_ffpredf_ftpref_ttpref_p_list_dict={state_to_state_ffpredf_ftpref_ttpref_p_list_dict}'.format(
+      state_to_state_ffpredf_ftpref_ttpref_p_list_dict=state_to_state_ffpredf_ftpref_ttpref_p_list_dict
+    ))
 
     uncertain_p = 1
 
