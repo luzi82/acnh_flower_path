@@ -436,3 +436,13 @@ if __name__ == '__main__':
     print('HVBDCRBNDI formula_data={formula_data}'.format(
       formula_data=formula_data
     ))
+
+  s2_formula_data_list = list(filter(
+    lambda i: (i['begin_depth']<=0) and (i['add_depth']>0),
+    s1_formula_data_list
+  ))
+
+  for formula_data in s2_formula_data_list:
+    print('HFSWZFLNRL formula_data={formula_data}'.format(
+      formula_data=formula_data
+    ))
