@@ -7,7 +7,12 @@ from collections import deque
 #from fractions import Fraction
 
 def ll(v):
+  if v == 0: return float('-inf')
   return math.log2(v)*LOG2_PRECISION
+
+def rr(v):
+  if v == float('-inf'): return v
+  return round(v)
 
 def kk(v):
   return 2**(v/8)
@@ -349,9 +354,9 @@ def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, pro
       False: fg_state_ffpredlog_ftpredlog_ttpredlog_p_list,
       True:  tg_state_ffpredlog_ftpredlog_ttpredlog_p_list,
     }
-    print('YUKGBLJRIA state_to_state_ffpredlog_ftpredlog_ttpredlog_p_list_dict={state_to_state_ffpredlog_ftpredlog_ttpredlog_p_list_dict}'.format(
-      state_to_state_ffpredlog_ftpredlog_ttpredlog_p_list_dict=state_to_state_ffpredlog_ftpredlog_ttpredlog_p_list_dict
-    ))
+    #print('YUKGBLJRIA state_to_state_ffpredlog_ftpredlog_ttpredlog_p_list_dict={state_to_state_ffpredlog_ftpredlog_ttpredlog_p_list_dict}'.format(
+    #  state_to_state_ffpredlog_ftpredlog_ttpredlog_p_list_dict=state_to_state_ffpredlog_ftpredlog_ttpredlog_p_list_dict
+    #))
 
     uncertain_p = 1
 
@@ -383,8 +388,8 @@ def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, pro
     i0_state_predlogr = (None, None)
     i0_formula_data = {
       'state_predlogr_p_list':[
-        ((True,  round(ll(pred))), 1-pred),
-        ((False, round(ll(pred))),   pred),
+        ((True,  rr(ll(pred))), 1-pred),
+        ((False, rr(ll(pred))),   pred),
       ],
       'else': 0
     }
@@ -430,7 +435,11 @@ def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, pro
         new_state, new_ffpredlog, new_ftpredlog, new_ttpredlog = state_ffpredlog_ftpredlog_ttpredlog
         new_fpred = kk(predlogr + new_ffpredlog)
         new_tpred = kk(predlogr + new_ftpredlog) + ((1-kk(predlogr))*kk(new_ttpredlog))
-        new_predlogr  = round(ll(new_fpred/(new_fpred+new_tpred)))
+        #print('DLTIEALPHQ new_fpred={new_fpred} new_tpred={new_tpred}'.format(
+        #  new_fpred=new_fpred,
+        #  new_tpred=new_tpred,
+        #))
+        new_predlogr  = rr(ll(new_fpred/(new_fpred+new_tpred)))
         new_state_predlogr_p_list.append(
           ((new_state, new_predlogr), new_p)
         )
@@ -440,10 +449,10 @@ def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, pro
         'else': 1
       }
 
-      print('RMBHBLCAAI state_predlogr={state_predlogr} new_state_predlogr_p_list={new_state_predlogr_p_list}'.format(
-        state_predlogr=state_predlogr,
-        new_state_predlogr_p_list=new_state_predlogr_p_list,
-      ))
+      #print('RMBHBLCAAI state_predlogr={state_predlogr} new_state_predlogr_p_list={new_state_predlogr_p_list}'.format(
+      #  state_predlogr=state_predlogr,
+      #  new_state_predlogr_p_list=new_state_predlogr_p_list,
+      #))
 
       for new_state_predlogr, new_p in new_state_predlogr_p_list:
         add_state_predlogr_p(new_state_predlogr, new_p*state_predlogr__p)
@@ -492,6 +501,7 @@ def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, pro
     add_depth = x_l_np[0]
     if add_depth - step_limit > FLOAT_CORRECT:
       break
+    add_depth += 1/cross0_c_to_p_dict[c0]
 
     roll_data_list.append({
       'product': tg,
