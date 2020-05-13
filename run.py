@@ -1,3 +1,4 @@
+import collections
 import futsu.json
 import futsu.storage
 import heapq
@@ -15,7 +16,9 @@ cross = path_algo.cross
 cross_verify = path_algo.cross_verify
 s_to_v_list_dict = path_algo.s_to_v_list_dict
 cross_data_list_to_c_to_p_dict = path_algo.cross_data_list_to_c_to_p_dict
-roll = path_algo.roll
+#roll = path_algo.roll
+
+def roll(*_,**__): return []
 
 #def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
 #  c1 = g_to_c_dict[gene1]
@@ -82,6 +85,12 @@ if __name__ == '__main__':
   flower_data = futsu.json.path_to_data(flower_data_path)
   
   gene_data_list = flower_data['gene_data_list']
+
+  g_to_gene_data_dict = {
+    i['g']: i
+    for i in gene_data_list
+  }
+  
 
   input_txt = 'input/{}.txt'.format(args.flower)
   if futsu.storage.is_blob_exist(input_txt):
@@ -294,11 +303,13 @@ if __name__ == '__main__':
         'method':       'cross_verify',
       })
 
-  print(len(depth_gene_list))
-  print(depth_gene_list)
-  print(list(sorted(map(lambda i:i[1],depth_gene_list))))
+  #print(len(depth_gene_list))
+  #print(depth_gene_list)
+  #print(list(sorted(map(lambda i:i[1],depth_gene_list))))
 
   needed_gene_set = set()
+
+  s0_formula_data_list = []
 
   for depth, gene in reversed(depth_gene_list):
     needed = False
@@ -313,7 +324,115 @@ if __name__ == '__main__':
     for formula_data in formula_data_list:
       if formula_data['total_depth'] > (depth + 0.00001): continue
       #formula_data['product.color'] = g_to_c_dict[formula_data['product']]
-      print(formula_data)
+      print('XECAGVSANZ formula_data={formula_data}'.format(
+        formula_data=formula_data
+      ))
+      s0_formula_data_list.append(formula_data)
       if formula_data['parent_list']:
         for parent_gene in formula_data['parent_list']:
           needed_gene_set.add(parent_gene)
+
+  pg_to_formula_data_list_dict = {}
+  for formula_data in s0_formula_data_list:
+    pg_to_formula_data_list_dict[formula_data['product']] = []
+  for formula_data in s0_formula_data_list:
+    pg_to_formula_data_list_dict[formula_data['product']].append(formula_data)
+
+  must_g_set = set()
+  must_g_queue = collections.deque()
+
+  # mark 0/2 gene
+  for pg in pg_to_formula_data_list_dict:
+    if '1' not in pg:
+      must_g_set.add(pg)
+      must_g_queue.append(pg)
+
+  while len(must_g_queue)>0:
+    g = must_g_queue.popleft()
+    formula_data_list = pg_to_formula_data_list_dict[g]
+    
+    parent_list = formula_data_list[0]['parent_list']
+    if not parent_list: continue
+    common_parent_set = set(parent_list)
+    for formula_data in formula_data_list:
+      parent_list = formula_data['parent_list']
+      if not parent_list:
+        common_parent_set = set()
+      else:
+        common_parent_set = common_parent_set & set(formula_data['parent_list'])
+    
+    for g0 in common_parent_set:
+      if g0 in must_g_set: continue
+      must_g_set.add(g0)
+      must_g_queue.append(g0)
+
+  print('BQHWSRIMFK must_g_set={must_g_set}'.format(
+    must_g_set=must_g_set
+  ))
+
+  pg_to_extra_cost_tuple_dict = {}
+  for formula_data in reversed(s0_formula_data_list):
+    pg = formula_data['product']
+
+    if formula_data['total_depth'] == 0:
+      extra_cost_tuple = (0,)
+    else:
+      extra_cost_tuple = map(lambda i:math.ceil(pg_to_extra_cost_tuple_dict[i][0]), formula_data['parent_list'])
+      extra_cost_tuple = list(extra_cost_tuple)
+      extra_cost_tuple.append(math.ceil(max(0,min(extra_cost_tuple))+formula_data['add_depth']))
+      extra_cost_tuple = tuple(reversed(sorted(extra_cost_tuple)))
+    formula_data['extra_cost_tuple'] = extra_cost_tuple
+
+    if g_to_gene_data_dict[pg]['s']>0:
+      extra_cost_tuple = (-3,)
+    elif args_myth and g_to_gene_data_dict[pg]['m']>0:
+      extra_cost_tuple = (-2,)
+    elif g_to_gene_data_dict[pg]['o']>0:
+      extra_cost_tuple = (-1,)
+    elif pg in must_g_set:
+      extra_cost_tuple = (0,)
+    old_extra_cost_tuple = pg_to_extra_cost_tuple_dict.get(pg,(float('inf'),))
+    extra_cost_tuple = min(old_extra_cost_tuple,extra_cost_tuple)
+    pg_to_extra_cost_tuple_dict[pg] = extra_cost_tuple
+
+  #print('MMRQSPXIKX s0_formula_data_list={s0_formula_data_list}'.format(
+  #  s0_formula_data_list=s0_formula_data_list
+  #))
+
+  for formula_data in s0_formula_data_list:
+    print('JHJLGOVYPU formula_data={formula_data}'.format(
+      formula_data=formula_data
+    ))
+
+  pg_to_min_extra_cost_tuple_dict = {}
+  for pg, formula_data_list in pg_to_formula_data_list_dict.items():
+    extra_cost_tuple_list = list(map(lambda i: i['extra_cost_tuple'], formula_data_list))
+    pg_to_min_extra_cost_tuple_dict[pg] = min(extra_cost_tuple_list)
+
+  s0_formula_data_list = list(filter(
+    lambda i: i['extra_cost_tuple']==pg_to_min_extra_cost_tuple_dict[i['product']],
+    s0_formula_data_list
+  ))
+
+  for formula_data in s0_formula_data_list:
+    print('STUZBEMMKR formula_data={formula_data}'.format(
+      formula_data=formula_data
+    ))
+
+  s1_formula_data_list = []
+  needed_gene_set = set()
+  for formula_data in s0_formula_data_list:
+    pg = formula_data['product']
+    if '1' not in pg:
+      needed_gene_set.add(pg)
+    if pg not in needed_gene_set: continue
+    parent_list = formula_data['parent_list']
+    if parent_list:
+      for g0 in parent_list:
+        needed_gene_set.add(g0)
+    s1_formula_data_list.append(formula_data)
+
+  for formula_data in s1_formula_data_list:
+    print('HVBDCRBNDI formula_data={formula_data}'.format(
+      formula_data=formula_data
+    ))
