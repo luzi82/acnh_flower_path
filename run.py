@@ -8,17 +8,17 @@ import path_algo
 
 from fractions import Fraction
 
-S6PASS = 0.9999966
-S6ERR = 1-S6PASS
+#S6PASS = 0.9999966
+#S6ERR = 1-S6PASS
 FLOAT_CORRECT = 0.00001
 
 cross = path_algo.cross
 cross_verify = path_algo.cross_verify
 s_to_v_list_dict = path_algo.s_to_v_list_dict
 cross_data_list_to_c_to_p_dict = path_algo.cross_data_list_to_c_to_p_dict
-#roll = path_algo.roll
 
-def roll(*_,**__): return []
+roll = path_algo.roll
+#def roll(*_,**__): return []
 
 #def roll(gene0, gene1, g_to_c_dict, old_gene_set=set()):
 #  c1 = g_to_c_dict[gene1]

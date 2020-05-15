@@ -23,6 +23,9 @@ LOG2_PRECISION = 8
 ACCEPTABLE_ERR_LOGS2 = ll(ACCEPTABLE_ERR)
 ACCEPTABLE_MISS_P = (1/(1-ACCEPTABLE_ERR))-1
 FLOAT_CORRECT = 0.00001
+BIG_MISS_GIVEIP_MISS_P = 0.9
+BIG_MISS_STEP_COUNT = 20
+BIG_MISS_GIVEIP_MISS_P0 = 0.5
 
 #print('WVFDOGKNWE ACCEPTABLE_ERR_LOGS2={ACCEPTABLE_ERR_LOGS2}'.format(
 #  ACCEPTABLE_ERR_LOGS2=ACCEPTABLE_ERR_LOGS2
@@ -146,9 +149,11 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
       #print('JBGAYVAORB g_to_p_dict='+str(g_to_p_dict))
       #print('CJDPHWVAMT g_to_logp_dict='+str(g_to_logp_dict))
       
-      step_limit = product_to_depth_dict.get(product_gene,float('inf')) - done_depth - 1/product_gene_to_cross_data_dict[product_gene]['p']
+      #step_limit = product_to_depth_dict.get(product_gene,float('inf')) - done_depth - 1/product_gene_to_cross_data_dict[product_gene]['p']
+      add_step_limit = product_to_depth_dict.get(product_gene,float('inf')) - done_depth
       step_count = 0
       uncertain_p = 1
+      big_miss_p = 0
       last_c_history_tuple_sum = 0
       step_count_over_break = False
       c_history_tuple_to_p_dict = {}
@@ -169,22 +174,42 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
 
         last_c_history_tuple_sum = sum(c_history_tuple)
 
-        if step_count + uncertain_p * last_c_history_tuple_sum > step_limit:
+        if big_miss_p > BIG_MISS_GIVEIP_MISS_P0:
+          break
+
+        if last_c_history_tuple_sum >= BIG_MISS_STEP_COUNT:
+          big_miss_p += uncertain_p
+          uncertain_p = 0
+          break
+
+        tmp_add_step = step_count + 1/product_gene_to_cross_data_dict[product_gene]['p']
+        tmp_add_step += uncertain_p * last_c_history_tuple_sum
+        tmp_add_step /= (1-big_miss_p)
+
+        if tmp_add_step > add_step_limit:
           step_count_over_break = True
           break
 
-        #print('QDXZRZJJUZ c_history_tuple={c_history_tuple} c_history_p={c_history_p}'.format(
+        #print('QDXZRZJJUZ c_history_tuple={c_history_tuple} c_history_p={c_history_p} uncertain_p={uncertain_p} big_miss_p={big_miss_p}'.format(
+        #  uncertain_p=uncertain_p,
         #  c_history_tuple=c_history_tuple,
-        #  c_history_p=c_history_p
+        #  c_history_p=c_history_p,
+        #  big_miss_p=big_miss_p
         #))
 
+        hit_p = 0
         miss_p = 0
         for product_gene0 in product_gene_list:
-          if product_gene0 == product_gene: continue
+          #for ci in range(len(verify_c_list)):
+          #  print('HEBIUJFFPQ ci={ci} cht={cht} vgtld={vgtld}'.format(
+          #    ci=ci,
+          #    cht=c_history_tuple[ci],
+          #    vgtld=verify_gc_to_logp_dict0.get((product_gene0,verify_c_list[ci]),float('-inf'))
+          #  ))
           logp_list = [
             0 if c_history_tuple[ci] == 0 else
-            float('-inf') if (product_gene0,verify_c_list[ci]) not in verify_gc_to_logp_dict else
-            c_history_tuple[ci] * verify_gc_to_logp_dict[(product_gene0,verify_c_list[ci])]
+            float('-inf') if (product_gene0,verify_c_list[ci]) not in verify_gc_to_logp_dict0 else
+            (c_history_tuple[ci] * verify_gc_to_logp_dict0[(product_gene0,verify_c_list[ci])])
             for ci in range(len(verify_c_list))
           ]
           g_p = sum(logp_list)
@@ -195,12 +220,22 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
           #  logp_list=logp_list,
           #  g_p=g_p
           #))
-          miss_p += g_p
+          if product_gene0 == product_gene:
+            hit_p += g_p
+          else:
+            miss_p += g_p
+        miss_p = miss_p/(miss_p+hit_p)
         #print('XVZFJWVTII miss_p={miss_p}'.format(miss_p=miss_p))
 
         if miss_p < ACCEPTABLE_MISS_P:
+          #print('PBRHHHSUDR miss_p={miss_p}'.format(miss_p=miss_p))
           uncertain_p -= c_history_p
           step_count += c_history_p*sum(c_history_tuple)
+          continue
+
+        if miss_p > BIG_MISS_GIVEIP_MISS_P:
+          uncertain_p -= c_history_p
+          big_miss_p += c_history_p
           continue
 
         for ci in range(len(verify_c_list)):
@@ -217,9 +252,11 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
 
       if step_count_over_break: continue
       if uncertain_p > ACCEPTABLE_ERR: continue
+      if big_miss_p > BIG_MISS_GIVEIP_MISS_P0: continue
 
       add_step = step_count + 1/product_gene_to_cross_data_dict[product_gene]['p']
       add_step += uncertain_p * last_c_history_tuple_sum
+      add_step /= (1-big_miss_p)
       cross_verify_data_list.append({
         'product': product_gene,
         'product.color': g_to_c_dict[product_gene],
