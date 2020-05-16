@@ -16,6 +16,7 @@ cross = path_algo.cross
 cross_verify = path_algo.cross_verify
 s_to_v_list_dict = path_algo.s_to_v_list_dict
 cross_data_list_to_c_to_p_dict = path_algo.cross_data_list_to_c_to_p_dict
+cross_self = path_algo.cross_self
 
 roll = path_algo.roll
 #def roll(*_,**__): return []
@@ -108,6 +109,7 @@ if __name__ == '__main__':
     i['g']: i['c']
     for i in gene_data_list
   }
+  path_algo_cache = {}
 
   gene_done_set = set()
 
@@ -183,52 +185,95 @@ if __name__ == '__main__':
     gene_to_depth_dict[gene] = depth
     depth_gene_list.append((depth, gene))
 
+    #for gene_done in gene_done_set:
+    #  gene_chance_list, chance_sum = cross(gene, gene_done)
+    #
+    #  c_to_gene_set_dict = {}
+    #  for gene_chance in gene_chance_list:
+    #    g = gene_chance['g']
+    #    c = g_to_c_dict[g]
+    #    if c not in c_to_gene_set_dict:
+    #      c_to_gene_set_dict[c] = set()
+    #    c_to_gene_set_dict[c].add(g)
+    #
+    #  for gene_chance in gene_chance_list:
+    #    g = gene_chance['g']
+    #    if g in gene_done_set: continue
+    #    c = g_to_c_dict[g]
+    #    gene_set = c_to_gene_set_dict[c]
+    #    if len(gene_set) > 1: continue
+    #    chance = gene_chance['chance']
+    #
+    #    add_depth = chance_sum/chance
+    #    total_depth = add_depth + depth
+    #
+    #    add_formul_data({
+    #      'product': g,
+    #      'product.color': g_to_c_dict[g],
+    #      'parent_list': (gene_done, gene),
+    #      'step_depth': add_depth,
+    #      'step_count': 1,
+    #      'begin_depth': depth,
+    #      'add_depth': add_depth,
+    #      'total_depth': total_depth,
+    #      'method': 'cross',
+    #    })
+
     for gene_done in gene_done_set:
-      gene_chance_list, chance_sum = cross(gene, gene_done)
-
-      c_to_gene_set_dict = {}
-      for gene_chance in gene_chance_list:
-        g = gene_chance['g']
-        c = g_to_c_dict[g]
-        if c not in c_to_gene_set_dict:
-          c_to_gene_set_dict[c] = set()
-        c_to_gene_set_dict[c].add(g)
-
-      for gene_chance in gene_chance_list:
-        g = gene_chance['g']
-        if g in gene_done_set: continue
-        c = g_to_c_dict[g]
-        gene_set = c_to_gene_set_dict[c]
-        if len(gene_set) > 1: continue
-        chance = gene_chance['chance']
-
-        add_depth = chance_sum/chance
-        total_depth = add_depth + depth
-
+      cross_self_data_list = cross_self(gene, gene_done, g_to_c_dict, path_algo_cache)
+      for cross_self_data in cross_self_data_list:
         add_formul_data({
-          'product': g,
-          'product.color': g_to_c_dict[g],
-          'parent_list': (gene_done, gene),
-          'step_depth': add_depth,
-          'step_count': 1,
+          'product': cross_self_data['product'],
+          'product.color': cross_self_data['product.color'],
+          'parent_list': cross_self_data['parent_list'],
           'begin_depth': depth,
-          'add_depth': add_depth,
-          'total_depth': total_depth,
-          'method': 'cross',
+          'add_depth': cross_self_data['add_depth'],
+          'total_depth': depth+cross_self_data['add_depth'],
+          'method': cross_self_data['method'],
         })
+
+    print('ZECKBYZTBW exit cross_self')
+
+    cross_verify_data_list = []
+    for gene_done0 in gene_done_set:
+      for gene_done1 in gene_done_set:
+        if gene_done1 < gene_done0: continue
+        pg0, pg1, vg = gene_done0, gene_done1, gene
+        cross_verify_data_list += cross_verify(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict, path_algo_cache)
+        if gene_done0 != gene:
+          pg0, pg1, vg = gene, gene_done1, gene_done0
+          cross_verify_data_list += cross_verify(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict, path_algo_cache)
+        if gene_done1 != gene:
+          pg0, pg1, vg = gene_done0, gene, gene_done1
+          cross_verify_data_list += cross_verify(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict, path_algo_cache)
+    for cross_verify_data in cross_verify_data_list:
+      #tx = cross_verify_data['parent_list']
+      #if tuple(sorted(tx)) == ('001','020','210'):
+      #  print('TXWQEJVXCD cross_verify_data={cross_verify_data}'.format(cross_verify_data))
+      add_formul_data({
+        'product':      cross_verify_data['product'],
+        'product.color': g_to_c_dict[cross_verify_data['product']],
+        'parent_list':  cross_verify_data['parent_list'],
+        'step_depth':   1,
+        'step_count':   cross_verify_data['add_depth'],
+        'begin_depth':  depth,
+        'add_depth':    cross_verify_data['add_depth'],
+        'total_depth':  depth+cross_verify_data['add_depth'],
+        'method':       'cross_verify',
+      })
 
     roll_data_list = []
     for gene_done0 in gene_done_set:
       for gene_done1 in gene_done_set:
         if gene_done1 < gene_done0: continue
         pg0, pg1, vg = gene_done0, gene_done1, gene
-        roll_data_list += roll(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict)
+        roll_data_list += roll(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict, path_algo_cache)
         if gene_done0 != gene:
           pg0, pg1, vg = gene, gene_done1, gene_done0
-          roll_data_list += roll(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict)
+          roll_data_list += roll(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict, path_algo_cache)
         if gene_done1 != gene:
           pg0, pg1, vg = gene_done0, gene, gene_done1
-          roll_data_list += roll(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict)
+          roll_data_list += roll(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict, path_algo_cache)
     for roll_data in roll_data_list:
       add_formul_data({
         'product':      roll_data['product'],
@@ -242,34 +287,16 @@ if __name__ == '__main__':
         'method':       'roll',
       })
 
-    cross_verify_data_list = []
-    for gene_done0 in gene_done_set:
-      for gene_done1 in gene_done_set:
-        if gene_done1 < gene_done0: continue
-        pg0, pg1, vg = gene_done0, gene_done1, gene
-        cross_verify_data_list += cross_verify(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict)
-        if gene_done0 != gene:
-          pg0, pg1, vg = gene, gene_done1, gene_done0
-          cross_verify_data_list += cross_verify(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict)
-        if gene_done1 != gene:
-          pg0, pg1, vg = gene_done0, gene, gene_done1
-          cross_verify_data_list += cross_verify(pg0, pg1, vg, g_to_c_dict, depth, tmp_gene_to_depth_dict)
-    for cross_verify_data in cross_verify_data_list:
-      add_formul_data({
-        'product':      cross_verify_data['product'],
-        'product.color': g_to_c_dict[cross_verify_data['product']],
-        'parent_list':  cross_verify_data['parent_list'],
-        'step_depth':   1,
-        'step_count':   cross_verify_data['add_depth'],
-        'begin_depth':  depth,
-        'add_depth':    cross_verify_data['add_depth'],
-        'total_depth':  depth+cross_verify_data['add_depth'],
-        'method':       'cross_verify',
-      })
-
   #print(len(depth_gene_list))
   #print(depth_gene_list)
   #print(list(sorted(map(lambda i:i[1],depth_gene_list))))
+
+  good_gene_list = depth_gene_list
+  good_gene_list = map(lambda i:i[1], good_gene_list)
+  good_gene_list = filter(lambda i:'1' not in i, good_gene_list)
+  good_gene_list = sorted(good_gene_list)
+  print('QJBVOIFLVS {}'.format(len(good_gene_list)))
+  print('MYYEZVMACM {}'.format(good_gene_list))
 
   needed_gene_set = set()
 

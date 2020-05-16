@@ -29,6 +29,9 @@ BIG_MISS_GIVEIP_MISS_P = 0.9
 BIG_MISS_STEP_COUNT = 20
 BIG_MISS_GIVEIP_MISS_P0 = 0.5
 
+EARLY_GIVEUP_STEP_COUNT = 10
+EARLY_GIVEUP_BAD_P = 0.75
+
 #print('WVFDOGKNWE ACCEPTABLE_ERR_LOGS2={ACCEPTABLE_ERR_LOGS2}'.format(
 #  ACCEPTABLE_ERR_LOGS2=ACCEPTABLE_ERR_LOGS2
 #))
@@ -45,14 +48,14 @@ s_to_v_list_dict = {
 #def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, product_to_depth_dict):
 #  return []
 
-def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, product_to_depth_dict):
-  #print('FIETHLFSFJ p={parent_gene_0},{parent_gene_1} v={verify_gene}'.format(
-  #  parent_gene_0=parent_gene_0,
-  #  parent_gene_1=parent_gene_1,
-  #  verify_gene=verify_gene,
-  #))
+def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, product_to_depth_dict, path_algo_cache):
+  print('FIETHLFSFJ p={parent_gene_0},{parent_gene_1} v={verify_gene}'.format(
+    parent_gene_0=parent_gene_0,
+    parent_gene_1=parent_gene_1,
+    verify_gene=verify_gene,
+  ))
 
-  cross_data_list, chance_sum = cross(parent_gene_0, parent_gene_1)
+  cross_data_list, chance_sum = cross(parent_gene_0, parent_gene_1, path_algo_cache)
   cross_c_to_p_dict = cross_data_list_to_c_to_p_dict(cross_data_list, g_to_c_dict)
 
   product_gene_to_cross_data_dict = {
@@ -82,7 +85,7 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
     verify_gc_to_p_dict = {}
     verify_g_to_c_to_p_dict_dict = {}
     for product_gene in product_gene_list:
-      verify_cross_data_list, _ = cross(verify_gene, product_gene)
+      verify_cross_data_list, _ = cross(verify_gene, product_gene, path_algo_cache)
       verify_c_to_p_dict = cross_data_list_to_c_to_p_dict(verify_cross_data_list, g_to_c_dict)
       verify_g_to_c_to_p_dict_dict[product_gene] = verify_c_to_p_dict
       for c, p in verify_c_to_p_dict.items():
@@ -102,31 +105,38 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
     #  verify_c_list=verify_c_list
     #))
 
-    # disable same gene
-    diable_gene_set = set()
+    # disable same c_to_p dict gene
+    disable_gene_set = set()
     for product_gene_0 in product_gene_list:
       for product_gene_1 in product_gene_list:
         if(product_gene_0==product_gene_1):continue
+        if(g_to_c_dict[product_gene_0]!=g_to_c_dict[product_gene_1]):continue
         verify_c_to_p_dict_0 = verify_g_to_c_to_p_dict_dict[product_gene_0]
         verify_c_to_p_dict_1 = verify_g_to_c_to_p_dict_dict[product_gene_1]
         #print('MKFNKVRKLU verify_c_to_p_dict_0={verify_c_to_p_dict_0}'.format(verify_c_to_p_dict_0=verify_c_to_p_dict_0))
         #print('SGYVMCQUTP verify_c_to_p_dict_1={verify_c_to_p_dict_1}'.format(verify_c_to_p_dict_1=verify_c_to_p_dict_1))
-        if verify_c_to_p_dict_0==verify_c_to_p_dict_1:
-          diable_gene_set.add(product_gene_0)
-          diable_gene_set.add(product_gene_1)
+        #if verify_c_to_p_dict_0==verify_c_to_p_dict_1:
+        #  disable_gene_set.add(product_gene_0)
+        #  disable_gene_set.add(product_gene_1)
+        verify_c_set_0 = set(verify_c_to_p_dict_0.keys())
+        verify_c_set_1 = set(verify_c_to_p_dict_1.keys())
+        if verify_c_set_0==verify_c_set_1:
+          disable_gene_set.add(product_gene_0)
+          disable_gene_set.add(product_gene_1)
 
-    #print('WSHHXUNMFY diable_gene_set={diable_gene_set}'.format(diable_gene_set=diable_gene_set))
+    #print('WSHHXUNMFY disable_gene_set={disable_gene_set}'.format(disable_gene_set=disable_gene_set))
 
     for product_gene in product_gene_list:
 
-      #print('PSWQKIQBMK product_gene='+product_gene)
+      print('PSWQKIQBMK product_gene='+product_gene)
+
       if product_gene == parent_gene_0:
         continue
       if product_gene == parent_gene_1:
         continue
       if product_gene == verify_gene:
         continue
-      if product_gene in diable_gene_set:
+      if product_gene in disable_gene_set:
         continue
 
       verify_gc_to_logp_dict0 = {}
@@ -184,11 +194,22 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
           uncertain_p = 0
           break
 
-        tmp_add_step = step_count + 1/product_gene_to_cross_data_dict[product_gene]['p']
-        tmp_add_step += uncertain_p * last_c_history_tuple_sum
-        tmp_add_step /= (1-big_miss_p)
+        if last_c_history_tuple_sum >= EARLY_GIVEUP_STEP_COUNT and uncertain_p+big_miss_p >= EARLY_GIVEUP_BAD_P:
+          break
 
-        if tmp_add_step > add_step_limit:
+        tmp_add_step = step_count + 1/product_gene_to_cross_data_dict[product_gene]['p']
+        tmp_add_step += last_c_history_tuple_sum * uncertain_p
+        tmp_add_step = ((1-big_miss_p)*tmp_add_step + (big_miss_p*last_c_history_tuple_sum))/(1-big_miss_p)
+        
+        print('BXSPMQCWBJ step_count={step_count} uncertain_p={uncertain_p} last_c_history_tuple_sum={last_c_history_tuple_sum} tmp_add_step={tmp_add_step} big_miss_p={big_miss_p}'.format(
+          step_count=step_count,
+          uncertain_p=uncertain_p,
+          last_c_history_tuple_sum=last_c_history_tuple_sum,
+          tmp_add_step=tmp_add_step,
+          big_miss_p=big_miss_p
+        ))
+
+        if tmp_add_step - add_step_limit > FLOAT_CORRECT:
           step_count_over_break = True
           break
 
@@ -252,13 +273,26 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
           c_history_tuple_to_p_dict[c_history0_tuple] = pp+p
           c_history_tuple_queue.append(c_history0_tuple)
 
-      if step_count_over_break: continue
-      if uncertain_p > ACCEPTABLE_ERR: continue
-      if big_miss_p > BIG_MISS_GIVEIP_MISS_P0: continue
+      if step_count_over_break:
+        print('JVQSOWATQU step_count_over_break product_gene={product_gene}'.format(
+          product_gene=product_gene
+        ))
+        continue
+      if uncertain_p > ACCEPTABLE_ERR:
+        print('RKOTERQIPG uncertain_p product_gene={product_gene}'.format(
+          product_gene=product_gene
+        ))
+        continue
+      if big_miss_p > BIG_MISS_GIVEIP_MISS_P0:
+        print('GXWPDFNVHI big_miss_p product_gene={product_gene}'.format(
+          product_gene=product_gene
+        ))
+        continue
 
-      add_step = step_count + 1/product_gene_to_cross_data_dict[product_gene]['p']
-      add_step += uncertain_p * last_c_history_tuple_sum
-      add_step /= (1-big_miss_p)
+      tmp_add_step = step_count + 1/product_gene_to_cross_data_dict[product_gene]['p']
+      tmp_add_step += last_c_history_tuple_sum * uncertain_p
+      tmp_add_step = ((1-big_miss_p)*tmp_add_step + (big_miss_p*last_c_history_tuple_sum))/(1-big_miss_p)
+      add_step = tmp_add_step
       cross_verify_data_list.append({
         'product': product_gene,
         'product.color': g_to_c_dict[product_gene],
@@ -271,14 +305,14 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
 
   return cross_verify_data_list
 
-def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, product_to_depth_dict):
-  #print('LPSDLVHKMM p={parent_gene_0},{parent_gene_1} v={verify_gene}'.format(
-  #  parent_gene_0=parent_gene_0,
-  #  parent_gene_1=parent_gene_1,
-  #  verify_gene=verify_gene,
-  #))
+def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, product_to_depth_dict, path_algo_cache):
+  print('LPSDLVHKMM p={parent_gene_0},{parent_gene_1} v={verify_gene}'.format(
+    parent_gene_0=parent_gene_0,
+    parent_gene_1=parent_gene_1,
+    verify_gene=verify_gene,
+  ))
 
-  cross0_data_list, cross0_chance_sum = cross(parent_gene_0, parent_gene_1)
+  cross0_data_list, cross0_chance_sum = cross(parent_gene_0, parent_gene_1, path_algo_cache)
   cross0_c_to_p_dict = cross_data_list_to_c_to_p_dict(cross0_data_list, g_to_c_dict)
 
   g0_to_cross_data_dict = {
@@ -309,7 +343,7 @@ def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, pro
     bad = False
     tg = None # target gene
     for g0 in g0_list:
-      cross1_data_list, _ = cross(verify_gene, g0)
+      cross1_data_list, _ = cross(verify_gene, g0, path_algo_cache)
       g1_itr = map(lambda i:i['g'], cross1_data_list)
       c0g1_set = set(filter(lambda i:g_to_c_dict[i]==c0, g1_itr))
       #print('DKYWEPEEJO g0_set={g0_set}, g0={g0} c0g1_set={c0g1_set}'.format(
@@ -342,7 +376,7 @@ def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, pro
     step_limit = product_to_depth_dict.get(tg,float('inf')) - done_depth - 1/cross0_c_to_p_dict[c0]
     if step_limit < 1: continue
 
-    fg_cross_data_list, _ = cross(verify_gene, fg)
+    fg_cross_data_list, _ = cross(verify_gene, fg, path_algo_cache)
     fg_cross_c_to_p_dict = cross_data_list_to_c_to_p_dict(fg_cross_data_list, g_to_c_dict)
     fg_cross_c_to_plog_dict = {k: ll(v) for k,v in fg_cross_c_to_p_dict.items()}
     fg_fg_p = list(filter(lambda i:i['g']==fg,fg_cross_data_list))[0]['p']
@@ -350,7 +384,7 @@ def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, pro
     fg_tg_p = list(filter(lambda i:i['g']==tg,fg_cross_data_list))[0]['p']
     fg_tg_plog = ll(fg_tg_p)
 
-    tg_cross_data_list, _ = cross(verify_gene, tg)
+    tg_cross_data_list, _ = cross(verify_gene, tg, path_algo_cache)
     tg_cross_c_to_p_dict = cross_data_list_to_c_to_p_dict(tg_cross_data_list, g_to_c_dict)
     tg_cross_c_to_plog_dict = {k: ll(v) for k,v in tg_cross_c_to_p_dict.items()}
 
@@ -556,7 +590,19 @@ def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, pro
 
   return roll_data_list
 
-def cross(gene0, gene1):
+def cross(g0a, g0b, path_algo_cache):
+  if 'cross' not in path_algo_cache:
+    path_algo_cache['cross'] = {}
+  ret_cache = path_algo_cache['cross']
+
+  g00, g01 = tuple(sorted((g0a, g0b)))
+  if (g00, g01) in ret_cache:
+    return ret_cache[(g00, g01)]
+  ret = _cross(g00, g01)
+  ret_cache[(g00, g01)] = ret
+  return ret
+
+def _cross(gene0, gene1):
   v_list_list = []
   for i in range(len(gene0)):
     s = gene0[i] + gene1[i]
@@ -594,28 +640,32 @@ def cross_data_list_to_c_to_p_dict(cross_data_list, g_to_c_dict):
   return c_to_p_dict
 
 
-def self_cross(g, g_to_c_dict, self_cross_cache):
-  if g in self_cross_cache:
-    return self_cross_cache[g]
-  ret = _self_cross(g, g_to_c_dict, self_cross_cache)
-  self_cross_cache[g] = ret
+def self_cross(g, g_to_c_dict, path_algo_cache):
+  if 'self_cross' not in path_algo_cache:
+    path_algo_cache['self_cross'] = {}
+  ret_cache = path_algo_cache['self_cross']
+
+  if g in ret_cache:
+    return ret_cache[g]
+  ret = _self_cross(g, g_to_c_dict, path_algo_cache)
+  ret_cache[g] = ret
   return ret
 
-def _self_cross(g, g_to_c_dict, self_cross_cache):
+def _self_cross(g, g_to_c_dict, path_algo_cache):
   if '1' not in g:
     return g
   c = g_to_c_dict[g]
-  g1_itr, _ = cross(g, g)
+  g1_itr, _ = cross(g, g, path_algo_cache)
   g1_itr = map(lambda i:i['g'], g1_itr)
   g1_itr = filter(lambda i:i!=g, g1_itr)
   g1_itr = filter(lambda i:g_to_c_dict[i]==c, g1_itr)
-  g1_itr = map(lambda i:self_cross(i, g_to_c_dict, self_cross_cache), g1_itr)
+  g1_itr = map(lambda i:self_cross(i, g_to_c_dict, path_algo_cache), g1_itr)
   g1_itr = list(set(g1_itr))
   if(len(g1_itr)==0): return g
   if(len(g1_itr)==1): return g1_itr[0]
   return None
 
-def cal_merge_step(target_g, g_list, p_list, g_to_c_dict):
+def cal_merge_step(target_g, g_list, p_list, g_to_c_dict, path_algo_cache):
   target_c = g_to_c_dict[target_g]
 
   g0_q = collections.deque()
@@ -626,7 +676,7 @@ def cal_merge_step(target_g, g_list, p_list, g_to_c_dict):
   while(len(g0_q)>0):
     g0 = g0_q.popleft()
 
-    cs1_data_list, _ = cross(g0,g0)
+    cs1_data_list, _ = cross(g0, g0, path_algo_cache)
     cs1_data_list = filter(lambda i:g_to_c_dict[i['g']]==target_c, cs1_data_list)
     cs1_data_list = list(cs1_data_list)
     g0_to_cs1_data_list_dict[g0] = cs1_data_list
@@ -675,3 +725,60 @@ def cal_merge_step(target_g, g_list, p_list, g_to_c_dict):
     #print('ZJZCBKPOLK p_1np={p_1np}'.format(p_1np=p_1np))
 
   return step
+
+def cross_self(g0a, g0b, g_to_c_dict, path_algo_cache):
+  print('LJFYZEYXZJ cross_self g0a={g0a} g0b={g0b}'.format(
+    g0a=g0a,
+    g0b=g0b
+  ))
+
+  g00, g01 = tuple(sorted((g0a, g0b)))
+
+  cs1_data_list, _ = cross(g00, g01, path_algo_cache)
+
+  c1_to_cs1_data_list_dict = {}
+  for cs1_data in cs1_data_list:
+    c1 = g_to_c_dict[cs1_data['g']]
+    if c1 not in c1_to_cs1_data_list_dict:
+      c1_to_cs1_data_list_dict[c1] = []
+    c1_to_cs1_data_list_dict[c1].append(cs1_data)
+
+  ret = []
+
+  for c1, c1_cs1_data_list in c1_to_cs1_data_list_dict.items():
+    if len(c1_cs1_data_list) == 1:
+      cs_data = c1_cs1_data_list[0]
+      ret.append({
+        'product': cs_data['g'],
+        'product.color': g_to_c_dict[cs_data['g']],
+        'parent_list': (g00, g01),
+        'add_depth': 1/cs_data['p'],
+        'method': 'cross',
+      })
+      continue
+
+    g1_sc_itr = c1_cs1_data_list
+    g1_sc_itr = map(lambda i:i['g'],g1_sc_itr)
+    g1_sc_itr = map(lambda i:self_cross(i, g_to_c_dict, path_algo_cache), g1_sc_itr)
+    g1_sc_itr = set(g1_sc_itr)
+    if len(g1_sc_itr) > 1: continue
+    g2 = list(g1_sc_itr)[0]
+    if g2 == None: continue
+    if g2 == g00: continue
+    if g2 == g01: continue
+
+    target_g = g2
+    g_list = list(map(lambda i:i['g'], c1_cs1_data_list))
+    p_list = list(map(lambda i:i['p'], c1_cs1_data_list))
+
+    add_step = cal_merge_step(g2, g_list, p_list, g_to_c_dict, path_algo_cache)
+
+    ret.append({
+      'product': target_g,
+      'product.color': g_to_c_dict[target_g],
+      'parent_list': (g00, g01),
+      'add_depth': (1/sum(p_list))+add_step,
+      'method': 'cross_self',
+    })
+
+  return ret
