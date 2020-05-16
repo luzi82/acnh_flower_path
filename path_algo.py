@@ -1,3 +1,5 @@
+import copy
+import collections
 import heapq
 import math
 import numpy.linalg
@@ -590,3 +592,86 @@ def cross_data_list_to_c_to_p_dict(cross_data_list, g_to_c_dict):
     p = cross_data['p']
     c_to_p_dict[c] = c_to_p_dict.get(c,0) + p
   return c_to_p_dict
+
+
+def self_cross(g, g_to_c_dict, self_cross_cache):
+  if g in self_cross_cache:
+    return self_cross_cache[g]
+  ret = _self_cross(g, g_to_c_dict, self_cross_cache)
+  self_cross_cache[g] = ret
+  return ret
+
+def _self_cross(g, g_to_c_dict, self_cross_cache):
+  if '1' not in g:
+    return g
+  c = g_to_c_dict[g]
+  g1_itr, _ = cross(g, g)
+  g1_itr = map(lambda i:i['g'], g1_itr)
+  g1_itr = filter(lambda i:i!=g, g1_itr)
+  g1_itr = filter(lambda i:g_to_c_dict[i]==c, g1_itr)
+  g1_itr = map(lambda i:self_cross(i, g_to_c_dict, self_cross_cache), g1_itr)
+  g1_itr = list(set(g1_itr))
+  if(len(g1_itr)==0): return g
+  if(len(g1_itr)==1): return g1_itr[0]
+  return None
+
+def cal_merge_step(target_g, g_list, p_list, g_to_c_dict):
+  target_c = g_to_c_dict[target_g]
+
+  g0_q = collections.deque()
+  for g in g_list: g0_q.append(g)
+  
+  g_all_set = set(g_list)
+  g0_to_cs1_data_list_dict = {}
+  while(len(g0_q)>0):
+    g0 = g0_q.popleft()
+
+    cs1_data_list, _ = cross(g0,g0)
+    cs1_data_list = filter(lambda i:g_to_c_dict[i['g']]==target_c, cs1_data_list)
+    cs1_data_list = list(cs1_data_list)
+    g0_to_cs1_data_list_dict[g0] = cs1_data_list
+
+    for cs1_data in cs1_data_list:
+      g1 = cs1_data['g']
+      if g1 in g_all_set: continue
+      g_all_set.add(g1)
+      g0_q.append(g1)
+
+  g_all_list = list(sorted(g_all_set))
+  g_to_idx_dict = { g_all_list[i]: i for i in range(len(g_all_list)) }
+
+  p_1np = np.zeros((len(g_all_list),))
+  for i in range(len(p_list)):
+    g0 = g_list[i]
+    p0 = p_list[i]
+    g0_idx = g_to_idx_dict[g0]
+    p_1np[g0_idx] = p0
+
+  m_2np = np.zeros((len(g_all_list),len(g_all_list)))
+  for g0, cs1_data_list in g0_to_cs1_data_list_dict.items():
+    g0_idx = g_to_idx_dict[g0]
+    for cs1_data in cs1_data_list:
+      g1 = cs1_data['g']
+      c1 = g_to_c_dict[g1]
+      if c1 != target_c: continue
+      g1_idx = g_to_idx_dict[g1]
+      p = cs1_data['p']
+      m_2np[g0_idx, g1_idx] = p
+
+  target_g_idx = g_to_idx_dict[target_g]
+
+  p_1np_sum = np.sum(p_1np)
+  p_1np /= p_1np_sum
+  #print('LKWFUKOTHJ p_1np={p_1np}'.format(p_1np=p_1np))
+
+  step = 0
+  while(True):
+    if p_1np[target_g_idx] >= 1-ACCEPTABLE_ERR: break
+    p_1np = np.matmul(p_1np, m_2np)
+    p_1np_sum = np.sum(p_1np)
+    p_1np /= p_1np_sum
+    step += 1/p_1np_sum
+    step += 1
+    #print('ZJZCBKPOLK p_1np={p_1np}'.format(p_1np=p_1np))
+
+  return step
