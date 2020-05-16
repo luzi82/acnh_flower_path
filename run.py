@@ -216,42 +216,6 @@ if __name__ == '__main__':
           'total_depth': total_depth,
           'method': 'cross',
         })
-        
-      #roll0 = roll(gene_done, gene, g_to_c_dict)
-      #if roll0 and roll0['method'] == 'roll':
-      #  g = roll0['g']
-      #  add_depth = roll0['add_depth']
-      #  total_depth = add_depth + depth
-      #
-      #  add_formul_data({
-      #    'product': g,
-      #    'product.color': g_to_c_dict[g],
-      #    'parent_list': (gene_done, gene),
-      #    'step_depth': roll0['step_depth'],
-      #    'step_count': roll0['step_count'],
-      #    'begin_depth': depth,
-      #    'add_depth': add_depth,
-      #    'total_depth': total_depth,
-      #    'method': 'roll',
-      #  })
-
-      #roll0 = roll(gene, gene_done, g_to_c_dict)
-      #if roll0 and roll0['method'] == 'roll':
-      #  g = roll0['g']
-      #  add_depth = roll0['add_depth']
-      #  total_depth = add_depth + depth
-      #
-      #  add_formul_data({
-      #    'product': g,
-      #    'product.color': g_to_c_dict[g],
-      #    'parent_list': (gene, gene_done),
-      #    'step_depth': roll0['step_depth'],
-      #    'step_count': roll0['step_count'],
-      #    'begin_depth': depth,
-      #    'add_depth': add_depth,
-      #    'total_depth': total_depth,
-      #    'method': 'roll',
-      #  })
 
     roll_data_list = []
     for gene_done0 in gene_done_set:
