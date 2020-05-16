@@ -17,6 +17,7 @@ cross_verify = path_algo.cross_verify
 s_to_v_list_dict = path_algo.s_to_v_list_dict
 cross_data_list_to_c_to_p_dict = path_algo.cross_data_list_to_c_to_p_dict
 cross_self = path_algo.cross_self
+count_one = path_algo.count_one
 
 roll = path_algo.roll
 #def roll(*_,**__): return []
@@ -113,16 +114,16 @@ if __name__ == '__main__':
 
   gene_done_set = set()
 
-  depth_gene_heap = []
+  depth_one_gene_heap = []
   for gene_data in gene_data_list:
     if gene_data['s'] > 0:
-      heapq.heappush(depth_gene_heap,(0,gene_data['g']))
+      heapq.heappush(depth_one_gene_heap,(0,count_one(gene_data['g']),gene_data['g']))
     elif args_myth and gene_data['m'] > 0:
-      heapq.heappush(depth_gene_heap,(0,gene_data['g']))
+      heapq.heappush(depth_one_gene_heap,(0,count_one(gene_data['g']),gene_data['g']))
     elif gene_data['o'] > 0:
-      heapq.heappush(depth_gene_heap,(0,gene_data['g']))
+      heapq.heappush(depth_one_gene_heap,(0,count_one(gene_data['g']),gene_data['g']))
 
-  print(depth_gene_heap)
+  print(depth_one_gene_heap)
 
   depth_gene_list = []
   gene_to_depth_dict = {}
@@ -133,7 +134,7 @@ if __name__ == '__main__':
     tmp_depth = tmp_gene_to_depth_dict.get(formula_data['product'],float('inf'))
     if formula_data['total_depth'] - tmp_depth > FLOAT_CORRECT: return
     tmp_gene_to_depth_dict[formula_data['product']] = min(tmp_depth,formula_data['total_depth'])
-    heapq.heappush(depth_gene_heap,(formula_data['total_depth'],formula_data['product']))
+    heapq.heappush(depth_one_gene_heap,(formula_data['total_depth'],count_one(formula_data['product']),formula_data['product']))
     if formula_data['product'] not in gene_to_formula_data_list_dict:
       gene_to_formula_data_list_dict[formula_data['product']] = []
     gene_to_formula_data_list_dict[formula_data['product']].append(formula_data)
@@ -176,8 +177,8 @@ if __name__ == '__main__':
         'method': 'own',
       })
 
-  while depth_gene_heap:
-    depth, gene = heapq.heappop(depth_gene_heap)
+  while depth_one_gene_heap:
+    depth, _, gene = heapq.heappop(depth_one_gene_heap)
     if gene in gene_done_set:
       continue
 

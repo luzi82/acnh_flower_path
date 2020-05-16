@@ -128,7 +128,7 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
 
     for product_gene in product_gene_list:
 
-      print('PSWQKIQBMK product_gene='+product_gene)
+      #print('PSWQKIQBMK product_gene='+product_gene)
 
       if product_gene == parent_gene_0:
         continue
@@ -201,13 +201,13 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
         tmp_add_step += last_c_history_tuple_sum * uncertain_p
         tmp_add_step = ((1-big_miss_p)*tmp_add_step + (big_miss_p*last_c_history_tuple_sum))/(1-big_miss_p)
         
-        print('BXSPMQCWBJ step_count={step_count} uncertain_p={uncertain_p} last_c_history_tuple_sum={last_c_history_tuple_sum} tmp_add_step={tmp_add_step} big_miss_p={big_miss_p}'.format(
-          step_count=step_count,
-          uncertain_p=uncertain_p,
-          last_c_history_tuple_sum=last_c_history_tuple_sum,
-          tmp_add_step=tmp_add_step,
-          big_miss_p=big_miss_p
-        ))
+        #print('BXSPMQCWBJ step_count={step_count} uncertain_p={uncertain_p} last_c_history_tuple_sum={last_c_history_tuple_sum} tmp_add_step={tmp_add_step} big_miss_p={big_miss_p}'.format(
+        #  step_count=step_count,
+        #  uncertain_p=uncertain_p,
+        #  last_c_history_tuple_sum=last_c_history_tuple_sum,
+        #  tmp_add_step=tmp_add_step,
+        #  big_miss_p=big_miss_p
+        #))
 
         if tmp_add_step - add_step_limit > FLOAT_CORRECT:
           step_count_over_break = True
@@ -274,19 +274,19 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
           c_history_tuple_queue.append(c_history0_tuple)
 
       if step_count_over_break:
-        print('JVQSOWATQU step_count_over_break product_gene={product_gene}'.format(
-          product_gene=product_gene
-        ))
+        #print('JVQSOWATQU step_count_over_break product_gene={product_gene}'.format(
+        #  product_gene=product_gene
+        #))
         continue
       if uncertain_p > ACCEPTABLE_ERR:
-        print('RKOTERQIPG uncertain_p product_gene={product_gene}'.format(
-          product_gene=product_gene
-        ))
+        #print('RKOTERQIPG uncertain_p product_gene={product_gene}'.format(
+        #  product_gene=product_gene
+        #))
         continue
       if big_miss_p > BIG_MISS_GIVEIP_MISS_P0:
-        print('GXWPDFNVHI big_miss_p product_gene={product_gene}'.format(
-          product_gene=product_gene
-        ))
+        #print('GXWPDFNVHI big_miss_p product_gene={product_gene}'.format(
+        #  product_gene=product_gene
+        #))
         continue
 
       tmp_add_step = step_count + 1/product_gene_to_cross_data_dict[product_gene]['p']
@@ -570,10 +570,17 @@ def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, pro
           #))
           a_ll_np[idx0,idx1] -= p1
         b_l_np[idx0] = formula_data_0['else']
-    x_l_np = np.linalg.solve(a_ll_np, b_l_np)
+
+    #print(a_ll_np)
+    #print(b_l_np)
+
+    try:
+      x_l_np = np.linalg.solve(a_ll_np, b_l_np)
+    except:
+      continue
     add_depth = x_l_np[0]
     if add_depth - step_limit > FLOAT_CORRECT:
-      break
+      continue
     add_depth += 1/cross0_c_to_p_dict[c0]
 
     roll_data_list.append({
@@ -782,3 +789,6 @@ def cross_self(g0a, g0b, g_to_c_dict, path_algo_cache):
     })
 
   return ret
+
+def count_one(g):
+  return len(list(filter(lambda i:i=='1',g)))
