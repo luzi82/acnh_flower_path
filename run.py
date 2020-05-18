@@ -233,7 +233,7 @@ if __name__ == '__main__':
           'method': cross_self_data['method'],
         })
 
-    print('ZECKBYZTBW exit cross_self')
+    #print('ZECKBYZTBW exit cross_self')
 
     cross_verify_data_list = []
     for gene_done0 in gene_done_set:

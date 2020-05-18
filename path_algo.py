@@ -50,11 +50,11 @@ s_to_v_list_dict = {
 #  return []
 
 def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, product_to_depth_dict, path_algo_cache):
-  print('FIETHLFSFJ p={parent_gene_0},{parent_gene_1} v={verify_gene}'.format(
-    parent_gene_0=parent_gene_0,
-    parent_gene_1=parent_gene_1,
-    verify_gene=verify_gene,
-  ))
+  #print('FIETHLFSFJ p={parent_gene_0},{parent_gene_1} v={verify_gene}'.format(
+  #  parent_gene_0=parent_gene_0,
+  #  parent_gene_1=parent_gene_1,
+  #  verify_gene=verify_gene,
+  #))
 
   cross_data_list, chance_sum = cross(parent_gene_0, parent_gene_1, path_algo_cache)
   cross_c_to_p_dict = cross_data_list_to_c_to_p_dict(cross_data_list, g_to_c_dict)
@@ -190,18 +190,18 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
         last_c_history_tuple_sum = sum(c_history_tuple)
 
         if big_miss_p > BIG_MISS_GIVEIP_MISS_P0:
-          print('FSMREWMMLA break')
+          #print('FSMREWMMLA break')
           break
 
         if last_c_history_tuple_sum >= BIG_MISS_STEP_COUNT:
-          print('KLMMIWJGHZ break')
+          #print('KLMMIWJGHZ break')
           big_miss_p += uncertain_p
           big_miss_ps += uncertain_p*last_c_history_tuple_sum
           uncertain_p = 0
           break
 
         if last_c_history_tuple_sum >= EARLY_GIVEUP_STEP_COUNT and uncertain_p+big_miss_p >= EARLY_GIVEUP_BAD_P:
-          print('MRPRLWGROP break')
+          #print('MRPRLWGROP break')
           break
 
         tmp_add_step = 0 if big_hit_p == 0 else step_count / big_hit_p
@@ -221,12 +221,12 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
           step_count_over_break = True
           break
 
-        print('QDXZRZJJUZ c_history_tuple={c_history_tuple} c_history_p={c_history_p} uncertain_p={uncertain_p} big_miss_p={big_miss_p}'.format(
-          uncertain_p=uncertain_p,
-          c_history_tuple=c_history_tuple,
-          c_history_p=c_history_p,
-          big_miss_p=big_miss_p
-        ))
+        #print('QDXZRZJJUZ c_history_tuple={c_history_tuple} c_history_p={c_history_p} uncertain_p={uncertain_p} big_miss_p={big_miss_p}'.format(
+        #  uncertain_p=uncertain_p,
+        #  c_history_tuple=c_history_tuple,
+        #  c_history_p=c_history_p,
+        #  big_miss_p=big_miss_p
+        #))
 
         hit_p = 0
         miss_p = 0
@@ -256,7 +256,7 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
           else:
             miss_p += g_p
         miss_p = miss_p/(miss_p+hit_p)
-        print('XVZFJWVTII miss_p={miss_p}'.format(miss_p=miss_p))
+        #print('XVZFJWVTII miss_p={miss_p}'.format(miss_p=miss_p))
 
         if miss_p < ACCEPTABLE_MISS_P:
           #print('PBRHHHSUDR miss_p={miss_p}'.format(miss_p=miss_p))
@@ -304,13 +304,13 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
       tmp_add_step += last_c_history_tuple_sum * uncertain_p
       tmp_add_step = ((1-big_miss_p)*tmp_add_step + (big_miss_ps))/(1-big_miss_p)
 
-      print('HFPUQARLDG {}'.format(pj({
-        'step_count' :step_count,
-        'last_c_history_tuple_sum': last_c_history_tuple_sum,
-        'uncertain_p':uncertain_p,
-        'big_hit_p': big_hit_p,
-        'big_miss_p': big_miss_p,
-      })))
+      #print('HFPUQARLDG {}'.format(pj({
+      #  'step_count' :step_count,
+      #  'last_c_history_tuple_sum': last_c_history_tuple_sum,
+      #  'uncertain_p':uncertain_p,
+      #  'big_hit_p': big_hit_p,
+      #  'big_miss_p': big_miss_p,
+      #})))
 
       add_step = tmp_add_step
       cross_verify_data_list.append({
@@ -326,11 +326,11 @@ def cross_verify(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_de
   return cross_verify_data_list
 
 def roll(parent_gene_0, parent_gene_1, verify_gene, g_to_c_dict, done_depth, product_to_depth_dict, path_algo_cache):
-  print('LPSDLVHKMM p={parent_gene_0},{parent_gene_1} v={verify_gene}'.format(
-    parent_gene_0=parent_gene_0,
-    parent_gene_1=parent_gene_1,
-    verify_gene=verify_gene,
-  ))
+  #print('LPSDLVHKMM p={parent_gene_0},{parent_gene_1} v={verify_gene}'.format(
+  #  parent_gene_0=parent_gene_0,
+  #  parent_gene_1=parent_gene_1,
+  #  verify_gene=verify_gene,
+  #))
 
   cross0_data_list, cross0_chance_sum = cross(parent_gene_0, parent_gene_1, path_algo_cache)
   cross0_c_to_p_dict = cross_data_list_to_c_to_p_dict(cross0_data_list, g_to_c_dict)
@@ -754,10 +754,10 @@ def cal_merge_step(target_g, g_list, p_list, g_to_c_dict, path_algo_cache):
   return step
 
 def cross_self(g0a, g0b, g_to_c_dict, path_algo_cache):
-  print('LJFYZEYXZJ cross_self g0a={g0a} g0b={g0b}'.format(
-    g0a=g0a,
-    g0b=g0b
-  ))
+  #print('LJFYZEYXZJ cross_self g0a={g0a} g0b={g0b}'.format(
+  #  g0a=g0a,
+  #  g0b=g0b
+  #))
 
   g00, g01 = tuple(sorted((g0a, g0b)))
 
